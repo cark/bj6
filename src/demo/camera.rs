@@ -114,19 +114,27 @@ fn zoom_destination(
 }
 
 fn calc_scale_bounds(window_width: f32, window_height: f32, config: &GameConfig) -> (f32, f32) {
-    let min_horizontal_scale =
-        config.checker.tile_size * config.camera.zoom_min_tiles / window_width;
-    let min_vertical_scale =
-        config.checker.tile_size * config.camera.zoom_min_tiles / window_height;
-    let min_scale = min_horizontal_scale.max(min_vertical_scale);
-    let max_horizontal_scale =
-        config.checker.tile_size * config.camera.zoom_max_tiles / window_width;
-    let max_vertical_scale =
-        config.checker.tile_size * config.camera.zoom_max_tiles / window_height;
-    let max_scale = max_horizontal_scale.min(max_vertical_scale);
+    let tile_size = config.checker.tile_size;
+    let zoom_min = config.camera.zoom_min_tiles;
+    let zoom_max = config.camera.zoom_max_tiles;
+
+    // Compute the minimum‐allowed scale so that at least `zoom_min_tiles` appear
+    let min_h = tile_size * zoom_min / window_width;
+    let min_v = tile_size * zoom_min / window_height;
+    let min_scale = min_h.max(min_v);
+
+    // Compute the maximum‐allowed scale so that at most `zoom_max_tiles` appear
+    let max_h = tile_size * zoom_max / window_width;
+    let max_v = tile_size * zoom_max / window_height;
+    let mut max_scale = max_h.min(max_v);
+
+    // If, under extreme aspect ratios, min_scale > max_scale, force them equal
+    if min_scale > max_scale {
+        max_scale = min_scale;
+    }
+
     (min_scale, max_scale)
 }
-
 fn apply_zoom_limits(
     window: Single<&Window>,
     mut destination: ResMut<CameraDestination>,
