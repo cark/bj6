@@ -5,6 +5,7 @@
 
 mod asset_tracking;
 mod audio;
+mod camera;
 mod data;
 mod demo;
 #[cfg(feature = "dev")]
@@ -14,6 +15,7 @@ mod screens;
 mod theme;
 
 use bevy::{asset::AssetMetaCheck, prelude::*};
+use camera::MainCamera;
 
 fn main() -> AppExit {
     App::new().add_plugins(AppPlugin).run()
@@ -107,5 +109,5 @@ struct Pause(pub bool);
 struct PausableSystems;
 
 fn spawn_camera(mut commands: Commands) {
-    commands.spawn((Name::new("Camera"), Camera2d));
+    commands.spawn((Name::new("Camera"), MainCamera, Camera2d));
 }

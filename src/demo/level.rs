@@ -3,16 +3,24 @@
 use bevy::prelude::*;
 
 use crate::{
-    asset_tracking::LoadResource,
-    // audio::music,
-    // demo::player::{PlayerAssets, player},
+    AppSystems, asset_tracking::LoadResource, camera::MainCamera, data::game_config::GameConfig,
     screens::Screen,
 };
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<LevelAssets>();
     app.load_resource::<LevelAssets>();
+
+    app.add_systems(
+        Update,
+        center_checker
+            .in_set(AppSystems::Update)
+            .run_if(in_state(Screen::Gameplay)),
+    );
 }
+
+#[derive(Component)]
+struct Checker;
 
 #[derive(Resource, Asset, Clone, Reflect)]
 #[reflect(Resource)]
@@ -43,13 +51,13 @@ pub fn spawn_level(
     // player_assets: Res<PlayerAssets>,
     // mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    warn!("spoawn!");
     commands.spawn((
         Level,
-        Name::new("Level"),
+        Name::new("Checker"),
         Transform::default(),
         Visibility::default(),
         StateScoped(Screen::Gameplay),
+        Checker,
         Sprite {
             image: level_assets.checker.clone(),
             image_mode: SpriteImageMode::Tiled {
@@ -57,7 +65,7 @@ pub fn spawn_level(
                 tile_y: true,
                 stretch_value: 20.,
             },
-            custom_size: Some(Vec2::splat(2000.0)),
+            custom_size: Some(Vec2::splat(4000.0)),
             ..default()
         },
         // children![
@@ -68,4 +76,18 @@ pub fn spawn_level(
         //     )
         // ],
     ));
+}
+
+fn center_checker(
+    camera: Single<&Transform, (With<MainCamera>, Without<Checker>)>,
+    checker: Single<&mut Transform, (With<Checker>, Without<MainCamera>)>,
+    config: Res<GameConfig>,
+) {
+    let camera_transform = camera.into_inner();
+    let mut checker_transform = checker.into_inner();
+    let tile_size = config.checker.tile_size;
+    checker_transform.translation = camera_transform
+        .translation
+        .div_euclid(Vec3::splat(tile_size * 2.0))
+        * Vec3::splat(tile_size * 2.0);
 }

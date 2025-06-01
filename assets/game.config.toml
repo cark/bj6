@@ -1,2 +1,7 @@
 [camera]
 follow_decay = 500
+min_zoom = 0.5
+max_zoom = 5.0
+
+[checker]
+tile_size = 40

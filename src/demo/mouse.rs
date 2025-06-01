@@ -28,11 +28,11 @@ fn start_panning(
     // mut cmd: Commands,
     mut next_mouse_state: ResMut<NextState<MouseState>>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
-    mut window: Single<&mut Window>,
+    // mut window: Single<&mut Window>,
 ) {
     if mouse_buttons.just_pressed(MouseButton::Left) {
         next_mouse_state.set(MouseState::Pan);
-        window.cursor_options.visible = false;
+        // window.cursor_options.visible = false;
         // window.cursor_options.grab_mode = CursorGrabMode::Locked;
     }
 }
@@ -41,11 +41,11 @@ fn stop_panning(
     // mut cmd: Commands,
     mut next_mouse_state: ResMut<NextState<MouseState>>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
-    mut window: Single<&mut Window>,
+    // mut window: Single<&mut Window>,
 ) {
     if mouse_buttons.just_released(MouseButton::Left) {
         next_mouse_state.set(MouseState::Normal);
-        window.cursor_options.visible = true;
+        // window.cursor_options.visible = true;
         // window.cursor_options.grab_mode = CursorGrabMode::None;
     }
 }
