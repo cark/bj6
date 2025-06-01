@@ -1,0 +1,17 @@
+[HammerTime]
+name = "Hammer time"
+moveable = false
+pickupable = false
+max_activations = 1
+prize = 1
+cost = 0
+sprite_name = "hammer_time.png"
+program = [{ type = "Hit", arg = [[0, 1]] }]
+
+[Pusher]
+name = "Pusher"
+max_activations = 3
+prize = 1
+cost = 1
+sprite_name = "pusher.png"
+program = [{ type = "Forward", arg = "Front" }]

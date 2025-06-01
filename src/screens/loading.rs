@@ -6,6 +6,7 @@ use bevy::prelude::*;
 use crate::{
     asset_tracking::ResourceHandles,
     data::game_config::{GameConfig, GameConfigHandle},
+    model::actor_type::ActorTypesHandle,
     screens::Screen,
     theme::prelude::*,
 };
@@ -22,12 +23,14 @@ pub(super) fn plugin(app: &mut App) {
 
 fn spawn_loading_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
-        widget::ui_root("Loading Screen"),
+        widget::center_ui_root("Loading Screen"),
         StateScoped(Screen::Loading),
         children![widget::label("Loading...")],
     ));
     let game_config_handle = GameConfigHandle(asset_server.load("game.config.toml"));
+    let actor_types_handle = ActorTypesHandle(asset_server.load("all.actor_types.toml"));
     commands.insert_resource(game_config_handle);
+    commands.insert_resource(actor_types_handle);
 }
 
 fn enter_gameplay_screen(mut next_screen: ResMut<NextState<Screen>>) {

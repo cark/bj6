@@ -1,7 +1,7 @@
 [camera]
 follow_decay = 500
-zoom_min_tiles = 8
-zoom_max_tiles = 32
+zoom_min_tiles = 6
+zoom_max_tiles = 48
 
 [checker]
 tile_size = 40

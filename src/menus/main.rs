@@ -10,12 +10,12 @@ pub(super) fn plugin(app: &mut App) {
 
 fn spawn_main_menu(mut commands: Commands) {
     commands.spawn((
-        widget::ui_root("Main Menu"),
+        widget::center_ui_root("Main Menu"),
         GlobalZIndex(2),
         StateScoped(Menu::Main),
         #[cfg(not(target_family = "wasm"))]
         children![
-            widget::button("Playgu", enter_loading_or_gameplay_screen),
+            widget::button("Play", enter_loading_or_gameplay_screen),
             widget::button("Settings", open_settings_menu),
             widget::button("Credits", open_credits_menu),
             widget::button("Exit", exit_app),

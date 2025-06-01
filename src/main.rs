@@ -11,6 +11,7 @@ mod demo;
 #[cfg(feature = "dev")]
 mod dev_tools;
 mod menus;
+mod model;
 mod screens;
 mod theme;
 

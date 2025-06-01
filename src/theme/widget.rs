@@ -11,7 +11,7 @@ use bevy::{
 use crate::theme::{interaction::InteractionPalette, palette::*};
 
 /// A root UI node that fills the window and centers its content.
-pub fn ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
+pub fn center_ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
     (
         Name::new(name),
         Node {
@@ -22,6 +22,26 @@ pub fn ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
             justify_content: JustifyContent::Center,
             flex_direction: FlexDirection::Column,
             row_gap: Px(20.0),
+            ..default()
+        },
+        // Don't block picking events for other UI roots.
+        Pickable::IGNORE,
+    )
+}
+
+/// A root UI node that fills the window and centers its content.
+pub fn gameplay_ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
+    (
+        Name::new(name),
+        Node {
+            position_type: PositionType::Absolute,
+            width: Percent(100.0),
+            height: Percent(100.0),
+            align_items: AlignItems::Start,
+            justify_content: JustifyContent::FlexStart,
+            flex_direction: FlexDirection::Column,
+            row_gap: Px(20.0),
+
             ..default()
         },
         // Don't block picking events for other UI roots.
@@ -58,6 +78,7 @@ where
 {
     button_base(
         text,
+        40.,
         action,
         (
             Node {
@@ -81,12 +102,15 @@ where
 {
     button_base(
         text,
+        30.,
         action,
         Node {
             width: Px(30.0),
             height: Px(30.0),
             align_items: AlignItems::Center,
             justify_content: JustifyContent::Center,
+            padding: UiRect::axes(Px(40.0), Px(20.0)),
+            flex_grow: 1.0,
             ..default()
         },
     )
@@ -95,6 +119,7 @@ where
 /// A simple button with text and an action defined as an [`Observer`]. The button's layout is provided by `button_bundle`.
 fn button_base<E, B, M, I>(
     text: impl Into<String>,
+    font_size: f32,
     action: I,
     button_bundle: impl Bundle,
 ) -> impl Bundle
@@ -108,7 +133,7 @@ where
     (
         Name::new("Button"),
         Node::default(),
-        Children::spawn(SpawnWith(|parent: &mut ChildSpawner| {
+        Children::spawn(SpawnWith(move |parent: &mut ChildSpawner| {
             parent
                 .spawn((
                     Name::new("Button Inner"),
@@ -122,7 +147,7 @@ where
                     children![(
                         Name::new("Button Text"),
                         Text(text),
-                        TextFont::from_font_size(40.0),
+                        TextFont::from_font_size(font_size),
                         TextColor(BUTTON_TEXT),
                         // Don't bubble picking events from the text up to the button.
                         Pickable::IGNORE,

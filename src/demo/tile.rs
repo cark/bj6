@@ -46,10 +46,15 @@ fn show_hovered_tile(
 ) {
     if ui_debug_options.enabled {
         if let Some(coord) = hovered_tile_coord.0 {
-            let tile_size = config.checker.tile_size;
-            let center: Vec2 = (coord.as_vec2() + Vec2::splat(0.5)) * tile_size;
-
-            gizmos.rect_2d(center, Vec2::splat(tile_size), RED_400);
+            gizmos.rect_2d(
+                tile_coord_to_world_coord(coord, config.checker.tile_size),
+                Vec2::splat(config.checker.tile_size),
+                RED_400,
+            );
         }
     }
+}
+
+pub fn tile_coord_to_world_coord(coord: IVec2, tile_size: f32) -> Vec2 {
+    (coord.as_vec2() + Vec2::splat(0.5)) * tile_size
 }

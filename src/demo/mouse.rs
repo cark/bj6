@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{AppSystems, camera::MainCamera, screens::Screen};
+use crate::{AppSystems, camera::MainCamera, screens::Screen, theme::interaction::ButtonHovering};
 
 pub fn plugin(app: &mut App) {
     app.init_state::<MouseState>();
@@ -53,9 +53,10 @@ fn start_panning(
     // mut cmd: Commands,
     mut next_mouse_state: ResMut<NextState<MouseState>>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
+    button_hovering: Res<ButtonHovering>,
     // mut window: Single<&mut Window>,
 ) {
-    if mouse_buttons.just_pressed(MouseButton::Left) {
+    if mouse_buttons.just_pressed(MouseButton::Left) && !button_hovering.is_hovering() {
         next_mouse_state.set(MouseState::Pan);
         // window.cursor_options.visible = false;
         // window.cursor_options.grab_mode = CursorGrabMode::Locked;
