@@ -3,9 +3,15 @@
 
 use bevy::prelude::*;
 
-use crate::{asset_tracking::ResourceHandles, screens::Screen, theme::prelude::*};
+use crate::{
+    asset_tracking::ResourceHandles,
+    data::game_config::{GameConfig, GameConfigHandle},
+    screens::Screen,
+    theme::prelude::*,
+};
 
 pub(super) fn plugin(app: &mut App) {
+    app.init_asset::<GameConfig>();
     app.add_systems(OnEnter(Screen::Loading), spawn_loading_screen);
 
     app.add_systems(
@@ -14,12 +20,14 @@ pub(super) fn plugin(app: &mut App) {
     );
 }
 
-fn spawn_loading_screen(mut commands: Commands) {
+fn spawn_loading_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         widget::ui_root("Loading Screen"),
         StateScoped(Screen::Loading),
         children![widget::label("Loading...")],
     ));
+    let game_config_handle = GameConfigHandle(asset_server.load("game.config.toml"));
+    commands.insert_resource(game_config_handle);
 }
 
 fn enter_gameplay_screen(mut next_screen: ResMut<NextState<Screen>>) {

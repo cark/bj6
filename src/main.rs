@@ -5,6 +5,7 @@
 
 mod asset_tracking;
 mod audio;
+mod data;
 mod demo;
 #[cfg(feature = "dev")]
 mod dev_tools;
@@ -45,11 +46,13 @@ impl Plugin for AppPlugin {
                     }
                     .into(),
                     ..default()
-                }),
+                })
+                .set(ImagePlugin::default_nearest()),
         );
 
         // Add other plugins.
         app.add_plugins((
+            data::plugin,
             asset_tracking::plugin,
             audio::plugin,
             demo::plugin,

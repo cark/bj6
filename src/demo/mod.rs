@@ -4,17 +4,19 @@
 //! to get a feeling for the template.
 
 use bevy::prelude::*;
+use camera::camera_plugin;
 
-mod animation;
+// mod animation;
+mod camera;
 pub mod level;
 mod movement;
-pub mod player;
+// pub mod player;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins((
-        animation::plugin,
+        // animation::plugin,
         level::plugin,
         movement::plugin,
-        player::plugin,
+        camera_plugin, // player::plugin,
     ));
 }
