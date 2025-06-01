@@ -11,5 +11,5 @@ pub struct GameConfig {
 
 #[derive(serde::Deserialize, Resource, Clone, Copy)]
 pub struct CameraConfig {
-    pub follow_speed: f32,
+    pub follow_decay: f32,
 }

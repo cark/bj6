@@ -20,9 +20,8 @@ fn reload_config(
     config_asset: Res<Assets<GameConfig>>,
 ) {
     for ev in config_asset_events.read() {
-        warn!("{ev:#?}");
         if let AssetEvent::LoadedWithDependencies { .. } = ev {
-            info!("config loaded!");
+            info!("config loaded.");
             let (_, config) = config_asset.iter().next().unwrap();
             cmd.insert_resource(config.clone());
         }

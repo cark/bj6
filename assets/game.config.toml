@@ -1,2 +1,2 @@
 [camera]
-follow_speed = 1
+follow_decay = 500

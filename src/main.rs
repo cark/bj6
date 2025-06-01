@@ -23,6 +23,7 @@ pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
+        app.insert_resource(ClearColor(Color::srgb(1., 0.5, 0.5)));
         // Add Bevy plugins.
         app.add_plugins(
             DefaultPlugins
@@ -37,7 +38,7 @@ impl Plugin for AppPlugin {
                     primary_window: Window {
                         title: "Bj6".to_string(),
                         fit_canvas_to_parent: true,
-                        position: if cfg!(feature = "dev") {
+                        position: if cfg!(feature = "dev") && cfg!(target_os = "windows") {
                             WindowPosition::new(ivec2(1920, 0))
                         } else {
                             WindowPosition::Automatic

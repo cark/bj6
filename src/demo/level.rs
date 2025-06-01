@@ -43,6 +43,7 @@ pub fn spawn_level(
     // player_assets: Res<PlayerAssets>,
     // mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
+    warn!("spoawn!");
     commands.spawn((
         Level,
         Name::new("Level"),
@@ -58,12 +59,13 @@ pub fn spawn_level(
             },
             custom_size: Some(Vec2::splat(2000.0)),
             ..default()
-        }, // children![
-           //     player(400.0, &player_assets, &mut texture_atlas_layouts),
-           //     (
-           //         Name::new("Gameplay Music"),
-           //         music(level_assets.music.clone())
-           //     )
-           // ],
+        },
+        // children![
+        //     player(400.0, &player_assets, &mut texture_atlas_layouts),
+        //     (
+        //         Name::new("Gameplay Music"),
+        //         music(level_assets.music.clone())
+        //     )
+        // ],
     ));
 }
