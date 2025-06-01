@@ -26,7 +26,8 @@ pub fn plugin(app: &mut App) {
     );
     app.add_systems(
         Update,
-        zoom_destination
+        (zoom_destination, apply_zoom_limits)
+            .chain()
             .in_set(AppSystems::Update)
             .run_if(in_state(Screen::Gameplay)),
     );
@@ -44,9 +45,7 @@ fn move_camera(
     camera: Single<(&mut Transform, &mut Projection), With<MainCamera>>,
     time: Res<Time>,
     config: Res<GameConfig>,
-    // config: Res<Handle<GameConfig>>,
 ) {
-    // warn!(config.camera.follow_speed);
     let (mut camera_transform, mut projection) = camera.into_inner();
     let target = destination.translation.extend(0.0);
     let decay_rate = f32::ln(config.camera.follow_decay);
@@ -66,7 +65,6 @@ fn move_destination(
     mut destination: ResMut<CameraDestination>,
     mouse_motion: Res<AccumulatedMouseMotion>,
     camera: Single<&Projection, With<MainCamera>>,
-    // config: Res<GameConfig>,
 ) {
     if let Projection::Orthographic(ortho) = camera.into_inner() {
         let delta = if cfg!(target_family = "wasm") {
@@ -94,17 +92,49 @@ fn zoom_destination(
         MouseScrollUnit::Pixel => mouse_scroll.delta.y,
     };
     if scroll_amount != 0.0 {
-        destination.scale *= 1.0 - scroll_amount / 1000.0;
-        if let Some(position) = window.into_inner().cursor_position() {
-            let (camera, camera_tr) = camera.into_inner();
-            let mouse_world_pos = camera
-                .viewport_to_world_2d(camera_tr, position)
-                .unwrap_or(destination.translation);
-            destination.translation.smooth_nudge(
-                &mouse_world_pos,
-                f32::ln(config.camera.follow_decay),
-                time.delta_secs() * 2.0,
-            );
+        let window = window.into_inner();
+        let (min_scale, max_scale) = calc_scale_bounds(window.width(), window.height(), &config);
+        let calculated_scale =
+            (destination.scale * 1.0 - scroll_amount / 1000.0).clamp(min_scale, max_scale);
+        if destination.scale != calculated_scale {
+            destination.scale = calculated_scale;
+            if let Some(position) = window.cursor_position() {
+                let (camera, camera_tr) = camera.into_inner();
+                let mouse_world_pos = camera
+                    .viewport_to_world_2d(camera_tr, position)
+                    .unwrap_or(destination.translation);
+                destination.translation.smooth_nudge(
+                    &mouse_world_pos,
+                    f32::ln(config.camera.follow_decay),
+                    time.delta_secs() * 2.0,
+                );
+            }
         }
     }
+}
+
+fn calc_scale_bounds(window_width: f32, window_height: f32, config: &GameConfig) -> (f32, f32) {
+    let min_horizontal_scale =
+        config.checker.tile_size * config.camera.zoom_min_tiles / window_width;
+    let min_vertical_scale =
+        config.checker.tile_size * config.camera.zoom_min_tiles / window_height;
+    let min_scale = min_horizontal_scale.max(min_vertical_scale);
+    let max_horizontal_scale =
+        config.checker.tile_size * config.camera.zoom_max_tiles / window_width;
+    let max_vertical_scale =
+        config.checker.tile_size * config.camera.zoom_max_tiles / window_height;
+    let max_scale = max_horizontal_scale.min(max_vertical_scale);
+    (min_scale, max_scale)
+}
+
+fn apply_zoom_limits(
+    window: Single<&Window>,
+    mut destination: ResMut<CameraDestination>,
+    config: Res<GameConfig>,
+) {
+    let window = window.into_inner();
+
+    let (min_scale, max_scale) = calc_scale_bounds(window.width(), window.height(), &config);
+
+    destination.scale = destination.scale.clamp(min_scale, max_scale);
 }

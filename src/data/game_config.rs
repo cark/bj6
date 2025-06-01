@@ -13,8 +13,8 @@ pub struct GameConfig {
 #[derive(serde::Deserialize, Resource, Clone, Copy)]
 pub struct CameraConfig {
     pub follow_decay: f32,
-    pub min_zoom: f32,
-    pub max_zoom: f32,
+    pub zoom_min_tiles: f32,
+    pub zoom_max_tiles: f32,
 }
 
 #[derive(serde::Deserialize, Resource, Clone, Copy)]
