@@ -46,7 +46,13 @@ fn move_destination(
     mut destination: ResMut<CameraDestination>,
     mouse_motion: Res<AccumulatedMouseMotion>,
 ) {
-    let x = destination.0.x - mouse_motion.delta.x;
-    let y = destination.0.y + mouse_motion.delta.y;
+    let delta = if cfg!(target_family = "wasm") {
+        mouse_motion.delta
+    } else {
+        mouse_motion.delta * 2.
+    };
+    let x = destination.0.x - delta.x;
+    let y = destination.0.y + delta.y;
+
     *destination = CameraDestination(vec2(x, y));
 }
