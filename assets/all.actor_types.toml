@@ -1,10 +1,18 @@
-[HammerTime]
-name = "Hammer time"
+[Start]
+name = "Start"
 moveable = false
 pickupable = false
 max_activations = 1
 prize = 1
 cost = 0
+sprite_name = "start.png"
+program = [{ type = "Hit", arg = [[0, 1]] }]
+
+[HammerTime]
+name = "Hammer time"
+max_activations = 3
+prize = 1
+cost = 1
 sprite_name = "hammer_time.png"
 program = [{ type = "Hit", arg = [[0, 1]] }]
 

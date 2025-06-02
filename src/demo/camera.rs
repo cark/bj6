@@ -5,7 +5,7 @@ use bevy::{
 
 use crate::{AppSystems, camera::MainCamera, data::game_config::GameConfig, screens::Screen};
 
-use super::mouse::MouseState;
+use super::{GameplayState, mouse::MouseState};
 
 pub fn plugin(app: &mut App) {
     app.insert_resource(CameraDestination {
@@ -84,9 +84,13 @@ fn zoom_destination(
     mouse_scroll: Res<AccumulatedMouseScroll>,
     window: Single<&Window>,
     camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
+    gameplay_state: Res<State<GameplayState>>,
     time: Res<Time>,
     config: Res<GameConfig>,
 ) {
+    if gameplay_state.get() != &GameplayState::Placement {
+        return;
+    }
     let scroll_amount = match mouse_scroll.unit {
         MouseScrollUnit::Line => mouse_scroll.delta.y * 100.,
         MouseScrollUnit::Pixel => mouse_scroll.delta.y,

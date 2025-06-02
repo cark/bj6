@@ -39,6 +39,8 @@ pub struct LevelAssets {
     pub coin: Handle<Image>,
     #[dependency]
     pub turn: Handle<Image>,
+    #[dependency]
+    pub round: Handle<Image>,
     // music: Handle<AudioSource>,
 }
 
@@ -54,13 +56,14 @@ impl FromWorld for LevelAssets {
             read_only: assets.load("images/read_only.png"),
             coin: assets.load("images/coin.png"),
             turn: assets.load("images/turn.png"),
+            round: assets.load("images/round.png"),
             //music: assets.load("audio/music/Fluffing A Duck.ogg"),
         }
     }
 }
 
 pub fn enter(mut commands: Commands, actor_types: Res<ActorTypes>) {
-    let hammer_time_actor = Actor::new(&actor_types, "HammerTime", ivec2(0, 0));
+    let hammer_time_actor = Actor::new(&actor_types, "Start", ivec2(0, 0));
     let start_entity = commands.spawn(hammer_time_actor).id();
     let board = Board::new(start_entity);
     commands.insert_resource(board);

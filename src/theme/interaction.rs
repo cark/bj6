@@ -2,6 +2,8 @@ use bevy::{platform::collections::HashSet, prelude::*};
 
 use crate::{asset_tracking::LoadResource, audio::sound_effect};
 
+use super::widget::Disabled;
+
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<InteractionPalette>();
     app.init_resource::<ButtonHovering>();
@@ -11,6 +13,7 @@ pub(super) fn plugin(app: &mut App) {
     app.load_resource::<InteractionAssets>();
     app.add_observer(play_on_hover_sound_effect);
     app.add_observer(play_on_click_sound_effect);
+    app.add_observer(on_background_change_request);
 }
 
 #[derive(Resource, Clone, Debug, Default)]
@@ -33,37 +36,59 @@ impl ButtonHovering {
 #[reflect(Component)]
 pub struct InteractionPalette {
     pub none: Color,
+    pub disabled: Color,
     pub hovered: Color,
     pub pressed: Color,
 }
 
+#[derive(Event, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct BackgroundChangeRequest;
+
+fn on_background_change_request(
+    trigger: Trigger<BackgroundChangeRequest>,
+    mut palette_query: Query<(
+        &Interaction,
+        &InteractionPalette,
+        &ChildOf,
+        &mut BackgroundColor,
+    )>,
+    disabled_parent: Query<&Disabled>,
+) {
+    let entity = trigger.target();
+    if let Ok((interaction, palette, childof, mut background)) = palette_query.get_mut(entity) {
+        let parent = childof.parent();
+        let parent_disabled = disabled_parent.get(parent).is_ok();
+        *background = if parent_disabled {
+            palette.disabled
+        } else {
+            match interaction {
+                Interaction::None => palette.none,
+                Interaction::Hovered => palette.hovered,
+                Interaction::Pressed => palette.pressed,
+            }
+        }
+        .into();
+    }
+}
+
 fn apply_interaction_palette(
-    mut palette_query: Query<
-        (
-            Entity,
-            &Interaction,
-            &InteractionPalette,
-            &mut BackgroundColor,
-        ),
-        Changed<Interaction>,
-    >,
+    mut commands: Commands,
+    palette_query: Query<(Entity, &Interaction), Changed<Interaction>>,
     mut button_hovering: ResMut<ButtonHovering>,
 ) {
-    for (entity, interaction, palette, mut background) in &mut palette_query {
-        *background = match interaction {
+    for (entity, interaction) in &palette_query {
+        match interaction {
             Interaction::None => {
                 button_hovering.0.remove(&entity);
                 // info!("hovering: {}", button_hovering.hover_count());
-                palette.none
             }
             Interaction::Hovered => {
                 button_hovering.0.insert(entity);
                 // info!("hovering: {}", button_hovering.hover_count());
-                palette.hovered
             }
-            Interaction::Pressed => palette.pressed,
+            Interaction::Pressed => (),
         }
-        .into();
+        commands.trigger_targets(BackgroundChangeRequest, entity);
     }
 }
 
@@ -90,14 +115,17 @@ fn play_on_hover_sound_effect(
     trigger: Trigger<Pointer<Over>>,
     mut commands: Commands,
     interaction_assets: Option<Res<InteractionAssets>>,
-    interaction_query: Query<(), With<Interaction>>,
+    interaction_query: Query<&ChildOf, With<Interaction>>,
+    disabled: Query<&Disabled>,
 ) {
     let Some(interaction_assets) = interaction_assets else {
         return;
     };
 
-    if interaction_query.contains(trigger.target()) {
-        commands.spawn(sound_effect(interaction_assets.hover.clone()));
+    if let Ok(child_of) = interaction_query.get(trigger.target()) {
+        if !disabled.contains(child_of.parent()) && interaction_query.contains(trigger.target()) {
+            commands.spawn(sound_effect(interaction_assets.hover.clone()));
+        }
     }
 }
 
@@ -105,13 +133,16 @@ fn play_on_click_sound_effect(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
     interaction_assets: Option<Res<InteractionAssets>>,
-    interaction_query: Query<(), With<Interaction>>,
+    interaction_query: Query<&ChildOf, With<Interaction>>,
+    disabled: Query<&Disabled>,
 ) {
     let Some(interaction_assets) = interaction_assets else {
         return;
     };
 
-    if interaction_query.contains(trigger.target()) {
-        commands.spawn(sound_effect(interaction_assets.click.clone()));
+    if let Ok(child_of) = interaction_query.get(trigger.target()) {
+        if !disabled.contains(child_of.parent()) && interaction_query.contains(trigger.target()) {
+            commands.spawn(sound_effect(interaction_assets.click.clone()));
+        }
     }
 }

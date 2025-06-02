@@ -1,10 +1,25 @@
 use bevy::prelude::*;
 
 use crate::{
-    demo::level::LevelAssets,
-    screens::Screen,
-    theme::{palette::HEADER_TEXT, widget},
+    demo::{GameplayState, level::LevelAssets},
+    theme::{
+        palette::HEADER_TEXT,
+        widget::{self, ButtonClick, Disabled, set_enabled},
+    },
 };
+
+pub(super) fn plugin(app: &mut App) {
+    app.add_systems(OnEnter(GameplayState::Placement), enable_shop_button);
+    app.add_systems(OnExit(GameplayState::Placement), disable_shop_button);
+}
+
+fn enable_shop_button(mut commands: Commands) {
+    set_enabled::<ShopButton>(&mut commands, true);
+}
+
+fn disable_shop_button(mut commands: Commands) {
+    set_enabled::<ShopButton>(&mut commands, false);
+}
 
 pub(super) fn top_bar_ui(assets: &LevelAssets) -> impl Bundle {
     (
@@ -38,6 +53,9 @@ struct CurrentGoldText;
 #[derive(Component)]
 struct MissingGoldText;
 
+const ICON_SIZE: f32 = 40.;
+const TEXT_SIZE: f32 = 25.;
+
 pub(super) fn gold_ui(assets: &LevelAssets) -> impl Bundle {
     (
         Name::new("Gold Part"),
@@ -52,18 +70,18 @@ pub(super) fn gold_ui(assets: &LevelAssets) -> impl Bundle {
             (
                 CurrentGoldText,
                 Text("1256".into()),
-                TextFont::from_font_size(40.0),
+                TextFont::from_font_size(TEXT_SIZE),
                 TextColor(HEADER_TEXT)
             ),
             (
                 Text("/".into()),
-                TextFont::from_font_size(40.0),
+                TextFont::from_font_size(TEXT_SIZE),
                 TextColor(HEADER_TEXT)
             ),
             (
                 MissingGoldText,
                 Text("1256".into()),
-                TextFont::from_font_size(40.0),
+                TextFont::from_font_size(TEXT_SIZE),
                 TextColor(HEADER_TEXT)
             ),
             (
@@ -73,8 +91,8 @@ pub(super) fn gold_ui(assets: &LevelAssets) -> impl Bundle {
                     ..default()
                 },
                 Node {
-                    width: Val::Px(30.0),
-                    height: Val::Px(30.0),
+                    width: Val::Px(ICON_SIZE),
+                    height: Val::Px(ICON_SIZE),
                     ..default()
                 }
             ),
@@ -82,23 +100,35 @@ pub(super) fn gold_ui(assets: &LevelAssets) -> impl Bundle {
     )
 }
 
+#[derive(Component)]
+struct ShopButtonPart;
+#[derive(Component)]
+pub struct ShopButton;
+
 fn shop_button_part_ui() -> impl Bundle {
     (
+        ShopButtonPart,
+        Visibility::default(),
+        Name::new("Shop Button Part"),
         Node {
             flex_grow: 1.,
             justify_content: JustifyContent::SpaceAround,
             align_items: AlignItems::Center,
             ..default()
         },
-        children![widget::button_small("Shop", on_shop_button_clicked)],
+        children![(
+            widget::button_small("Shop", on_shop_button_clicked),
+            ShopButton
+        )],
     )
 }
 
-pub fn on_shop_button_clicked(
-    _: Trigger<Pointer<Click>>,
-    mut _next_screen: ResMut<NextState<Screen>>,
+fn on_shop_button_clicked(
+    _: Trigger<ButtonClick>,
+
+    mut next_state: ResMut<NextState<GameplayState>>,
 ) {
-    warn!("shop button click")
+    next_state.set(GameplayState::Shop);
 }
 
 #[derive(Component)]
@@ -118,25 +148,41 @@ pub(super) fn turns_left_ui(assets: &LevelAssets) -> impl Bundle {
             (
                 TurnsLeftText,
                 Text("5".into()),
-                TextFont::from_font_size(40.0),
+                TextFont::from_font_size(TEXT_SIZE),
                 TextColor(HEADER_TEXT)
             ),
             (
                 ImageNode {
                     image: assets.turn.clone(),
-                    // image_mode: NodeImageMode::Stretch,
                     ..default()
                 },
                 Node {
-                    width: Val::Px(30.0),
-                    height: Val::Px(30.0),
+                    width: Val::Px(ICON_SIZE),
+                    height: Val::Px(ICON_SIZE),
                     ..default()
                 }
             ),
             (
                 TurnsLeftText,
-                Text("left".into()),
-                TextFont::from_font_size(40.0),
+                Text("left on".into()),
+                TextFont::from_font_size(TEXT_SIZE),
+                TextColor(HEADER_TEXT)
+            ),
+            (
+                ImageNode {
+                    image: assets.round.clone(),
+                    ..default()
+                },
+                Node {
+                    width: Val::Px(ICON_SIZE),
+                    height: Val::Px(ICON_SIZE),
+                    ..default()
+                }
+            ),
+            (
+                TurnsLeftText,
+                Text("1".into()),
+                TextFont::from_font_size(TEXT_SIZE),
                 TextColor(HEADER_TEXT)
             ),
         ],

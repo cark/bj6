@@ -3,12 +3,16 @@
 use std::borrow::Cow;
 
 use bevy::{
+    // ecs::{spawn::SpawnWith, system::IntoObserverSystem},
     ecs::{spawn::SpawnWith, system::IntoObserverSystem},
     prelude::*,
     ui::Val::*,
 };
 
 use crate::theme::{interaction::InteractionPalette, palette::*};
+
+#[derive(Component)]
+pub struct Disabled;
 
 /// A root UI node that fills the window and centers its content.
 pub fn center_ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
@@ -116,6 +120,9 @@ where
     )
 }
 
+#[derive(Event, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ButtonClick;
+
 /// A simple button with text and an action defined as an [`Observer`]. The button's layout is provided by `button_bundle`.
 fn button_base<E, B, M, I>(
     text: impl Into<String>,
@@ -129,11 +136,14 @@ where
     I: IntoObserverSystem<E, B, M>,
 {
     let text = text.into();
-    let action = IntoObserverSystem::into_system(action);
+    let action_system = IntoObserverSystem::into_system(action);
     (
         Name::new("Button"),
         Node::default(),
+        // Disabled,
         Children::spawn(SpawnWith(move |parent: &mut ChildSpawner| {
+            let main_button_entity = parent.target_entity();
+
             parent
                 .spawn((
                     Name::new("Button Inner"),
@@ -141,6 +151,7 @@ where
                     BackgroundColor(BUTTON_BACKGROUND),
                     InteractionPalette {
                         none: BUTTON_BACKGROUND,
+                        disabled: BUTTON_DISABLED_BACKGROUND,
                         hovered: BUTTON_HOVERED_BACKGROUND,
                         pressed: BUTTON_PRESSED_BACKGROUND,
                     },
@@ -154,7 +165,29 @@ where
                     )],
                 ))
                 .insert(button_bundle)
-                .observe(action);
+                .observe(action_system)
+                .observe(move |trigger: Trigger<Pointer<Click>>, world: &mut World| {
+                    let is_disabled = world.get::<Disabled>(main_button_entity).is_some();
+                    if !is_disabled {
+                        world.trigger_targets(ButtonClick, trigger.target());
+                    }
+                });
         })),
     )
+}
+
+pub fn set_enabled<T: Component>(commands: &mut Commands, enabled: bool) {
+    if enabled {
+        commands.run_system_cached(|mut commands: Commands, query: Query<Entity, With<T>>| {
+            for ent in query.iter() {
+                commands.entity(ent).remove::<Disabled>();
+            }
+        });
+    } else {
+        commands.run_system_cached(|mut commands: Commands, query: Query<Entity, With<T>>| {
+            for ent in query.iter() {
+                commands.entity(ent).insert(Disabled);
+            }
+        });
+    }
 }
