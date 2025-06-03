@@ -1,7 +1,7 @@
 use bevy::prelude::{Val::*, *};
 
 use crate::{
-    demo::GameplayState,
+    demo::{GameplayState, level::LevelAssets},
     theme::{
         palette::HEADER_TEXT,
         widget::{self, ButtonClick},
@@ -14,7 +14,11 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(GameplayState::Shop), spawn_shop);
 }
 
-fn spawn_shop(mut commands: Commands, content_panel: Single<Entity, With<ContentPanel>>) {
+fn spawn_shop(
+    mut commands: Commands,
+    content_panel: Single<Entity, With<ContentPanel>>,
+    assets: Res<LevelAssets>,
+) {
     let content_panel = content_panel.into_inner();
     commands.entity(content_panel).with_children(|commands| {
         // commands.spawn((
@@ -23,13 +27,13 @@ fn spawn_shop(mut commands: Commands, content_panel: Single<Entity, With<Content
         //     StateScoped(GameplayState::Shop),
         //     children![shop_window()],
         // ));
-        commands.spawn(shop_window());
+        commands.spawn(shop_window(&assets));
     });
 }
 
 const TITLE_TEXT_SIZE: f32 = 30.;
 
-fn shop_window() -> impl Bundle {
+fn shop_window(assets: &LevelAssets) -> impl Bundle {
     (
         Name::new("Shop Window"),
         Node {
@@ -45,7 +49,8 @@ fn shop_window() -> impl Bundle {
             ..default()
         },
         BackgroundColor(Color::linear_rgba(0.0, 0.0, 0.0, 0.8)),
-        children![title_bar(), content(), buttons()],
+        StateScoped(GameplayState::Shop),
+        children![title_bar(), content(assets), buttons()],
     )
 }
 
@@ -70,7 +75,7 @@ fn title_bar() -> impl Bundle {
     )
 }
 
-fn content() -> impl Bundle {
+fn content(assets: &LevelAssets) -> impl Bundle {
     (
         Node {
             flex_grow: 1.0,
@@ -80,17 +85,17 @@ fn content() -> impl Bundle {
             align_items: AlignItems::FlexStart,
             ..default()
         },
-        children![(items_panel())],
+        children![(items_panel(assets))],
     )
 }
 
-fn items_panel() -> impl Bundle {
+fn items_panel(assets: &LevelAssets) -> impl Bundle {
     (
         Node {
             height: Percent(100.),
             flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::Start,
-            row_gap: Px(20.),
+            row_gap: Px(10.),
             ..default()
         },
         children![
@@ -105,7 +110,56 @@ fn items_panel() -> impl Bundle {
                 },
                 BackgroundColor(Color::linear_rgba(0.0, 0.0, 0.0, 0.8)),
             ),
-            (widget::button_small("Restock", on_restock_button_clicked),)
+            //(widget::button_small("Restock", on_restock_button_clicked),)
+            (
+                RestockButton,
+                widget::content_button(
+                    restock_button_content(1, HEADER_TEXT, assets),
+                    on_restock_button_clicked
+                ),
+            )
+        ],
+    )
+}
+
+#[derive(Component)]
+pub struct RestockCostText;
+
+#[derive(Component)]
+pub struct RestockButton;
+
+fn restock_button_content(gold: u32, gold_color: Color, assets: &LevelAssets) -> impl Bundle {
+    let font_size = 14.;
+    (
+        Node {
+            flex_direction: FlexDirection::Row,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            ..Default::default()
+        },
+        children![
+            (
+                Text("Restock: ".to_string()),
+                TextFont::from_font_size(font_size),
+                TextColor(HEADER_TEXT),
+            ),
+            (
+                RestockCostText,
+                Text(format!("{gold}").to_string()),
+                TextFont::from_font_size(font_size),
+                TextColor(gold_color),
+            ),
+            (
+                ImageNode {
+                    image: assets.coin.clone(),
+                    ..default()
+                },
+                Node {
+                    width: Val::Px(font_size),
+                    height: Val::Px(font_size),
+                    ..default()
+                }
+            ),
         ],
     )
 }

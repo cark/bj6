@@ -80,9 +80,8 @@ where
     B: Bundle,
     I: IntoObserverSystem<E, B, M>,
 {
+    let text = text.into();
     button_base(
-        text,
-        40.,
         action,
         (
             Node {
@@ -94,6 +93,13 @@ where
             },
             BorderRadius::MAX,
         ),
+        (
+            Name::new("Button Text"),
+            Text(text),
+            TextFont::from_font_size(40.),
+            TextColor(BUTTON_TEXT),
+            // Don't bubble picking events from the text up to the button.
+        ),
     )
 }
 
@@ -104,9 +110,8 @@ where
     B: Bundle,
     I: IntoObserverSystem<E, B, M>,
 {
+    let text = text.into();
     button_base(
-        text,
-        30.,
         action,
         Node {
             width: Px(30.0),
@@ -117,6 +122,34 @@ where
             flex_grow: 1.0,
             ..default()
         },
+        (
+            Name::new("Button Text"),
+            Text(text),
+            TextFont::from_font_size(30.),
+            TextColor(BUTTON_TEXT),
+        ),
+    )
+}
+
+/// A small square button with content and an action defined as an [`Observer`].
+pub fn content_button<E, B, M, I>(content: impl Bundle, action: I) -> impl Bundle
+where
+    E: Event,
+    B: Bundle,
+    I: IntoObserverSystem<E, B, M>,
+{
+    button_base(
+        action,
+        Node {
+            width: Px(30.0),
+            height: Px(30.0),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            padding: UiRect::axes(Px(40.0), Px(20.0)),
+            flex_grow: 1.0,
+            ..default()
+        },
+        content,
     )
 }
 
@@ -125,17 +158,15 @@ pub struct ButtonClick;
 
 /// A simple button with text and an action defined as an [`Observer`]. The button's layout is provided by `button_bundle`.
 fn button_base<E, B, M, I>(
-    text: impl Into<String>,
-    font_size: f32,
     action: I,
     button_bundle: impl Bundle,
+    content_bundle: impl Bundle,
 ) -> impl Bundle
 where
     E: Event,
     B: Bundle,
     I: IntoObserverSystem<E, B, M>,
 {
-    let text = text.into();
     let action_system = IntoObserverSystem::into_system(action);
     (
         Name::new("Button"),
@@ -155,14 +186,7 @@ where
                         hovered: BUTTON_HOVERED_BACKGROUND,
                         pressed: BUTTON_PRESSED_BACKGROUND,
                     },
-                    children![(
-                        Name::new("Button Text"),
-                        Text(text),
-                        TextFont::from_font_size(font_size),
-                        TextColor(BUTTON_TEXT),
-                        // Don't bubble picking events from the text up to the button.
-                        Pickable::IGNORE,
-                    )],
+                    children![(content_bundle, Pickable::IGNORE,)],
                 ))
                 .insert(button_bundle)
                 .observe(action_system)
