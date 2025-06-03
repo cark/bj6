@@ -5,18 +5,26 @@ use super::{
     game::Game,
 };
 
-const RESTOCK_MULTIPLIER: f32 = 1.5;
 const RESTOCK_ITEM_COUNT: usize = 3;
 
-#[derive(Debug, Resource, Clone, Default)]
+#[derive(Debug, Resource, Clone)]
 pub struct Shop {
-    pub restock_cost: f32,
+    restock_cost: f32,
+    restock_multiplier: f32,
     pub items: Vec<String>,
 }
 
 impl Shop {
+    pub fn new(restock_multiplier: f32) -> Self {
+        Self {
+            restock_cost: 0.0,
+            restock_multiplier,
+            items: Vec::new(),
+        }
+    }
+
     pub fn restock(&mut self, game: &mut Game, actor_types: &ActorTypes) {
-        if game.cash < self.restock_cost as u64 {
+        if game.gold < self.restock_cost as u64 {
             return;
         }
 
@@ -24,7 +32,7 @@ impl Shop {
             .0
             .iter()
             .filter(|(_name, actor_type)| {
-                (actor_type.cost > 0) && (actor_type.cost as u64 <= game.cash)
+                (actor_type.cost > 0) && (actor_type.cost as u64 <= game.gold)
             })
             .collect();
 
@@ -44,8 +52,53 @@ impl Shop {
         if self.restock_cost == 0.0 {
             self.restock_cost = 1.0
         } else {
-            game.cash -= self.restock_cost as u64;
-            self.restock_cost *= RESTOCK_MULTIPLIER
+            game.gold -= self.restock_cost as u64;
+            self.restock_cost *= self.restock_multiplier
         }
+    }
+
+    pub fn can_restock(&self, game: &Game) -> bool {
+        game.gold >= self.restock_cost as u64
+    }
+
+    pub fn index_of(&self, actor_type_id: &str) -> Option<usize> {
+        self.items.iter().position(|a| a.as_str() == actor_type_id)
+    }
+
+    pub fn take_item(
+        &mut self,
+        actor_type_id: &str,
+        game: &mut Game,
+        actor_types: &ActorTypes,
+    ) -> bool {
+        if let Some(index) = self.index_of(actor_type_id) {
+            if let Some(actor_type) = actor_types.get(actor_type_id) {
+                if game.gold >= actor_type.cost as u64 {
+                    game.gold -= actor_type.cost as u64;
+                    self.items.remove(index);
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    pub fn return_item(
+        &mut self,
+        actor_type_id: &str,
+        index: usize,
+        game: &mut Game,
+        actor_types: &ActorTypes,
+    ) -> bool {
+        if let Some(actor_type) = actor_types.get(actor_type_id) {
+            game.gold += actor_type.cost as u64;
+            self.items.insert(index, actor_type_id.to_string());
+            return true;
+        }
+        false
+    }
+
+    pub fn restock_cost(&self) -> u64 {
+        self.restock_cost as u64
     }
 }

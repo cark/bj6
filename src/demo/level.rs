@@ -42,6 +42,18 @@ pub struct LevelAssets {
     pub turn: Handle<Image>,
     #[dependency]
     pub round: Handle<Image>,
+    #[dependency]
+    pub poke: Handle<Image>,
+    #[dependency]
+    pub actor_rect: Handle<Image>,
+    #[dependency]
+    pub lmb: Handle<Image>,
+    #[dependency]
+    pub rmb: Handle<Image>,
+    #[dependency]
+    pub mmb: Handle<Image>,
+    #[dependency]
+    pub rotate: Handle<Image>,
     // music: Handle<AudioSource>,
 }
 
@@ -58,17 +70,23 @@ impl FromWorld for LevelAssets {
             coin: assets.load("images/coin.png"),
             turn: assets.load("images/turn.png"),
             round: assets.load("images/round.png"),
+            poke: assets.load("images/poke.png"),
+            actor_rect: assets.load("images/actor_rect.png"),
+            lmb: assets.load("images/lmb.png"),
+            rmb: assets.load("images/rmb.png"),
+            mmb: assets.load("images/mmb.png"),
+            rotate: assets.load("images/rotate.png"),
             //music: assets.load("audio/music/Fluffing A Duck.ogg"),
         }
     }
 }
 
-pub fn enter(mut commands: Commands, actor_types: Res<ActorTypes>) {
+pub fn enter(mut commands: Commands, actor_types: Res<ActorTypes>, game_config: Res<GameConfig>) {
     let hammer_time_actor = Actor::new(&actor_types, "Start", ivec2(0, 0));
     let start_entity = commands.spawn(hammer_time_actor).id();
     let board = Board::new(start_entity);
-    let mut game = Game::default();
-    let mut shop = Shop::default();
+    let mut game = Game::new(game_config.game.start_gold);
+    let mut shop = Shop::new(game_config.shop.restock_multiplier);
     shop.restock(&mut game, &actor_types);
     commands.insert_resource(board);
     commands.insert_resource(game);

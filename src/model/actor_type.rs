@@ -7,9 +7,9 @@ pub struct ActorType {
     pub name: String,
     pub program: Program,
     #[serde(default = "default_as_true")]
-    pub moveable: bool,
+    pub pushable: bool,
     #[serde(default = "default_as_true")]
-    pub pickupable: bool,
+    pub dragable: bool,
     #[serde(default = "default_as_right")]
     pub looks_to: Direction,
     pub max_activations: u8,
@@ -44,11 +44,14 @@ fn default_as_right() -> Direction {
 pub struct ActorTypes(pub HashMap<String, ActorType>);
 
 impl ActorTypes {
-    pub fn get(&self, name: &str) -> Option<&ActorType> {
-        self.0.get(name)
+    pub fn get(&self, actor_type_id: &str) -> Option<&ActorType> {
+        self.0.get(actor_type_id)
     }
 }
 
 #[derive(Resource)]
 #[allow(dead_code)]
 pub struct ActorTypesHandle(pub Handle<ActorTypes>);
+
+#[derive(Component, Debug, Clone)]
+pub struct ActorTypeId(pub String);

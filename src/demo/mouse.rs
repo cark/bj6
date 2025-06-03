@@ -2,10 +2,11 @@ use bevy::prelude::*;
 
 use crate::{AppSystems, camera::MainCamera, screens::Screen, theme::interaction::ButtonHovering};
 
-use super::GameplayState;
+use super::{GameplayState, tile::HoveredActorEntity};
 
 pub fn plugin(app: &mut App) {
     app.init_state::<MouseState>();
+    app.insert_resource(PanButton(MouseButton::Left));
     app.init_resource::<MouseCoords>();
     app.init_resource::<MouseWorldCoords>();
     app.add_systems(
@@ -30,11 +31,14 @@ pub enum MouseState {
     Pan,
 }
 
+#[derive(Resource, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+struct PanButton(MouseButton);
+
 #[derive(Resource, Debug, Default, Deref)]
 pub struct MouseCoords(Option<Vec2>);
 
 #[derive(Resource, Debug, Default, Deref)]
-pub struct MouseWorldCoords(Option<Vec2>);
+pub struct MouseWorldCoords(pub Option<Vec2>);
 
 fn update_mouse_coords(
     camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
@@ -57,27 +61,35 @@ fn start_panning(
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     button_hovering: Res<ButtonHovering>,
     gameplay_state: Res<State<GameplayState>>,
+    mut pan_button: ResMut<PanButton>,
+    hovered_actor_entity: Res<HoveredActorEntity>,
     // mut window: Single<&mut Window>,
 ) {
-    if mouse_buttons.just_pressed(MouseButton::Left)
-        && !button_hovering.is_hovering()
-        && gameplay_state.get() == &GameplayState::Placement
-    {
-        next_mouse_state.set(MouseState::Pan);
-        // window.cursor_options.visible = false;
-        // window.cursor_options.grab_mode = CursorGrabMode::Locked;
-    }
+    if !button_hovering.is_hovering() {
+        if mouse_buttons.just_pressed(MouseButton::Left)
+            && hovered_actor_entity.is_none()
+            && gameplay_state.get() == &GameplayState::Placement
+        {
+            next_mouse_state.set(MouseState::Pan);
+            *pan_button = PanButton(MouseButton::Left);
+        } else if mouse_buttons.just_pressed(MouseButton::Middle) {
+            next_mouse_state.set(MouseState::Pan);
+            *pan_button = PanButton(MouseButton::Middle);
+        } else {
+            next_mouse_state.set(MouseState::Normal);
+        }
+    } else {
+        next_mouse_state.set(MouseState::Normal);
+    };
 }
 
 fn stop_panning(
-    // mut cmd: Commands,
+    mouse_state: Res<State<MouseState>>,
     mut next_mouse_state: ResMut<NextState<MouseState>>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
-    // mut window: Single<&mut Window>,
+    pan_button: ResMut<PanButton>,
 ) {
-    if mouse_buttons.just_released(MouseButton::Left) {
+    if *mouse_state.get() == MouseState::Pan && mouse_buttons.just_released(pan_button.0) {
         next_mouse_state.set(MouseState::Normal);
-        // window.cursor_options.visible = true;
-        // window.cursor_options.grab_mode = CursorGrabMode::None;
     }
 }

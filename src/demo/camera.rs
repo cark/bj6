@@ -88,7 +88,7 @@ fn zoom_destination(
     time: Res<Time>,
     config: Res<GameConfig>,
 ) {
-    if gameplay_state.get() != &GameplayState::Placement {
+    if ![GameplayState::Placement, GameplayState::Drag].contains(gameplay_state.get()) {
         return;
     }
     let scroll_amount = match mouse_scroll.unit {

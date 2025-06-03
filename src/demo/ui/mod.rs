@@ -1,3 +1,4 @@
+pub mod actions;
 pub mod shop;
 mod top_bar;
 

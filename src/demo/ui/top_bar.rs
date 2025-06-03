@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     demo::{GameplayState, level::LevelAssets},
+    model::game::Game,
     theme::{
         palette::HEADER_TEXT,
         widget::{self, ButtonClick, set_enabled},
@@ -11,6 +12,23 @@ use crate::{
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(GameplayState::Placement), enable_shop_button);
     app.add_systems(OnExit(GameplayState::Placement), disable_shop_button);
+}
+
+#[derive(Event, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct UpdateTopBarEvent;
+
+fn on_update_top_bar(
+    _: Trigger<UpdateTopBarEvent>,
+    game: Res<Game>,
+    current_gold_text: Single<&mut Text, With<CurrentGoldText>>,
+    required_gold_text: Single<&mut Text, With<RequiredGoldText>>,
+    turns_left_text: Single<&mut Text, With<TurnsLeftText>>,
+    round_text: Single<&mut Text, With<RoundText>>,
+) {
+    current_gold_text.into_inner().0 = game.gold.to_string();
+    required_gold_text.into_inner().0 = game.required_gold.to_string();
+    turns_left_text.into_inner().0 = game.turns_left.to_string();
+    round_text.into_inner().0 = game.round.to_string();
 }
 
 fn enable_shop_button(mut commands: Commands) {
@@ -51,7 +69,7 @@ pub(super) fn top_bar_ui(assets: &LevelAssets) -> impl Bundle {
 struct CurrentGoldText;
 
 #[derive(Component)]
-struct MissingGoldText;
+struct RequiredGoldText;
 
 const ICON_SIZE: f32 = 40.;
 const TEXT_SIZE: f32 = 25.;
@@ -79,7 +97,7 @@ pub(super) fn gold_ui(assets: &LevelAssets) -> impl Bundle {
                 TextColor(HEADER_TEXT)
             ),
             (
-                MissingGoldText,
+                RequiredGoldText,
                 Text("1256".into()),
                 TextFont::from_font_size(TEXT_SIZE),
                 TextColor(HEADER_TEXT)
@@ -133,6 +151,9 @@ fn on_shop_button_clicked(
 
 #[derive(Component)]
 struct TurnsLeftText;
+
+#[derive(Component)]
+struct RoundText;
 
 pub(super) fn turns_left_ui(assets: &LevelAssets) -> impl Bundle {
     (

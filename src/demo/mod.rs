@@ -1,5 +1,6 @@
 pub mod actor;
 mod camera;
+pub mod drag;
 pub mod level;
 mod mouse;
 pub mod tile;
@@ -19,6 +20,7 @@ pub(super) fn plugin(app: &mut App) {
         actor::plugin,
         tile::plugin,
         ui::plugin,
+        drag::plugin,
     ));
 }
 
@@ -30,5 +32,6 @@ pub enum GameplayState {
     #[default]
     Placement,
     Shop,
+    Drag,
     // Run,
 }

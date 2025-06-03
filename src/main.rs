@@ -16,6 +16,7 @@ mod screens;
 mod theme;
 
 use bevy::{asset::AssetMetaCheck, prelude::*};
+use bevy_tweening::TweeningPlugin;
 use camera::MainCamera;
 
 fn main() -> AppExit {
@@ -28,7 +29,7 @@ impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::srgb(1., 0.5, 0.5)));
         // Add Bevy plugins.
-        app.add_plugins(
+        app.add_plugins((
             DefaultPlugins
                 .set(AssetPlugin {
                     // Wasm builds will check for meta files (that don't exist) if this isn't set.
@@ -52,7 +53,8 @@ impl Plugin for AppPlugin {
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest()),
-        );
+            TweeningPlugin,
+        ));
 
         // Add other plugins.
         app.add_plugins((
@@ -72,6 +74,7 @@ impl Plugin for AppPlugin {
             Update,
             (
                 AppSystems::TickTimers,
+                AppSystems::GatherActions,
                 AppSystems::RecordInput,
                 AppSystems::Update,
             )
@@ -94,6 +97,8 @@ impl Plugin for AppPlugin {
 enum AppSystems {
     /// Tick timers.
     TickTimers,
+    /// compute available actions
+    GatherActions,
     /// Record player input.
     RecordInput,
     /// Do everything else (consider splitting this into further variants).

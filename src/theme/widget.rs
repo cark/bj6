@@ -11,6 +11,8 @@ use bevy::{
 
 use crate::theme::{interaction::InteractionPalette, palette::*};
 
+use super::interaction::BackgroundChangeRequest;
+
 #[derive(Component)]
 pub struct Disabled;
 
@@ -224,16 +226,26 @@ where
 
 pub fn set_enabled<T: Component>(commands: &mut Commands, enabled: bool) {
     if enabled {
-        commands.run_system_cached(|mut commands: Commands, query: Query<Entity, With<T>>| {
-            for ent in query.iter() {
-                commands.entity(ent).remove::<Disabled>();
-            }
-        });
+        commands.run_system_cached(
+            |mut commands: Commands, query: Query<(Entity, &Children), With<T>>| {
+                for (ent, children) in query.iter() {
+                    commands.entity(ent).remove::<Disabled>();
+                    for child in children.iter() {
+                        commands.trigger_targets(BackgroundChangeRequest, child);
+                    }
+                }
+            },
+        );
     } else {
-        commands.run_system_cached(|mut commands: Commands, query: Query<Entity, With<T>>| {
-            for ent in query.iter() {
-                commands.entity(ent).insert(Disabled);
-            }
-        });
+        commands.run_system_cached(
+            |mut commands: Commands, query: Query<(Entity, &Children), With<T>>| {
+                for (ent, children) in query.iter() {
+                    commands.entity(ent).insert(Disabled);
+                    for child in children.iter() {
+                        commands.trigger_targets(BackgroundChangeRequest, child);
+                    }
+                }
+            },
+        );
     }
 }

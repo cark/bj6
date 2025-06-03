@@ -18,6 +18,7 @@ pub(super) fn plugin(app: &mut App) {
     app.add_observer(play_on_click_sound_effect);
     app.add_observer(on_background_change_request);
     app.add_observer(on_set_button_selected);
+    app.add_observer(on_button_removed);
 }
 
 #[derive(Event, Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -70,7 +71,7 @@ pub struct InteractionPalette {
 }
 
 #[derive(Event, Debug, Clone, Copy, PartialEq, Eq, Hash)]
-struct BackgroundChangeRequest;
+pub struct BackgroundChangeRequest;
 
 fn on_background_change_request(
     trigger: Trigger<BackgroundChangeRequest>,
@@ -82,8 +83,10 @@ fn on_background_change_request(
     )>,
     disabled_parent: Query<&Disabled>,
 ) {
+    // warn!("1");
     let entity = trigger.target();
     if let Ok((interaction, palette, childof, mut background)) = palette_query.get_mut(entity) {
+        // warn!("2");
         let parent = childof.parent();
         let parent_disabled = disabled_parent.get(parent).is_ok();
         *background = if parent_disabled {
@@ -118,6 +121,13 @@ fn apply_interaction_palette(
         }
         commands.trigger_targets(BackgroundChangeRequest, entity);
     }
+}
+
+fn on_button_removed(
+    trigger: Trigger<OnRemove, Button>,
+    mut button_hovering: ResMut<ButtonHovering>,
+) {
+    button_hovering.0.remove(&trigger.target());
 }
 
 #[derive(Resource, Asset, Clone, Reflect)]

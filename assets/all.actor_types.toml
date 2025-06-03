@@ -1,7 +1,7 @@
 [Start]
 name = "Start"
-moveable = false
-pickupable = false
+pushable = false
+dragable = false
 max_activations = 1
 prize = 1
 cost = 0

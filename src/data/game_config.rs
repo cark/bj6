@@ -8,6 +8,9 @@ pub struct GameConfigHandle(pub Handle<GameConfig>);
 pub struct GameConfig {
     pub camera: CameraConfig,
     pub checker: Checker,
+    pub game: GameGameConfig,
+    pub drag: DragConfig,
+    pub shop: ShopConfig,
 }
 
 #[derive(serde::Deserialize, Resource, Clone, Copy)]
@@ -20,4 +23,20 @@ pub struct CameraConfig {
 #[derive(serde::Deserialize, Resource, Clone, Copy)]
 pub struct Checker {
     pub tile_size: f32,
+}
+
+#[derive(serde::Deserialize, Resource, Clone, Copy)]
+pub struct GameGameConfig {
+    pub start_gold: u64,
+}
+
+#[derive(serde::Deserialize, Resource, Clone, Copy)]
+pub struct DragConfig {
+    pub scale: f32,
+    pub alpha: f32,
+}
+
+#[derive(serde::Deserialize, Resource, Clone, Copy)]
+pub struct ShopConfig {
+    pub restock_multiplier: f32,
 }
