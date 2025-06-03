@@ -14,6 +14,9 @@ use crate::theme::{interaction::InteractionPalette, palette::*};
 #[derive(Component)]
 pub struct Disabled;
 
+#[derive(Component)]
+pub struct Selected;
+
 /// A root UI node that fills the window and centers its content.
 pub fn center_ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
     (
@@ -44,7 +47,7 @@ pub fn gameplay_ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
             align_items: AlignItems::Start,
             justify_content: JustifyContent::FlexStart,
             flex_direction: FlexDirection::Column,
-            row_gap: Px(20.0),
+            row_gap: Px(0.0),
 
             ..default()
         },
@@ -100,6 +103,12 @@ where
             TextColor(BUTTON_TEXT),
             // Don't bubble picking events from the text up to the button.
         ),
+        InteractionPalette {
+            none: BUTTON_BACKGROUND,
+            disabled: BUTTON_DISABLED_BACKGROUND,
+            hovered: BUTTON_HOVERED_BACKGROUND,
+            pressed: BUTTON_PRESSED_BACKGROUND,
+        },
     )
 }
 
@@ -128,6 +137,12 @@ where
             TextFont::from_font_size(30.),
             TextColor(BUTTON_TEXT),
         ),
+        InteractionPalette {
+            none: BUTTON_BACKGROUND,
+            disabled: BUTTON_DISABLED_BACKGROUND,
+            hovered: BUTTON_HOVERED_BACKGROUND,
+            pressed: BUTTON_PRESSED_BACKGROUND,
+        },
     )
 }
 
@@ -141,15 +156,22 @@ where
     button_base(
         action,
         Node {
-            width: Px(30.0),
-            height: Px(30.0),
+            // width: Px(30.0),
+            // height: Px(30.0),
+            // padding: UiRect::axes(Px(40.0), Px(20.0)),
             align_items: AlignItems::Center,
             justify_content: JustifyContent::Center,
-            padding: UiRect::axes(Px(40.0), Px(20.0)),
+            padding: UiRect::axes(Px(20.0), Px(10.0)),
             flex_grow: 1.0,
             ..default()
         },
         content,
+        InteractionPalette {
+            none: BUTTON_BACKGROUND,
+            disabled: BUTTON_DISABLED_BACKGROUND,
+            hovered: BUTTON_HOVERED_BACKGROUND,
+            pressed: BUTTON_PRESSED_BACKGROUND,
+        },
     )
 }
 
@@ -161,6 +183,7 @@ fn button_base<E, B, M, I>(
     action: I,
     button_bundle: impl Bundle,
     content_bundle: impl Bundle,
+    palette: InteractionPalette,
 ) -> impl Bundle
 where
     E: Event,
@@ -170,7 +193,11 @@ where
     let action_system = IntoObserverSystem::into_system(action);
     (
         Name::new("Button"),
-        Node::default(),
+        Node {
+            border: UiRect::all(Px(2.0)),
+            ..default()
+        },
+        BorderColor::DEFAULT,
         // Disabled,
         Children::spawn(SpawnWith(move |parent: &mut ChildSpawner| {
             let main_button_entity = parent.target_entity();
@@ -180,12 +207,7 @@ where
                     Name::new("Button Inner"),
                     Button,
                     BackgroundColor(BUTTON_BACKGROUND),
-                    InteractionPalette {
-                        none: BUTTON_BACKGROUND,
-                        disabled: BUTTON_DISABLED_BACKGROUND,
-                        hovered: BUTTON_HOVERED_BACKGROUND,
-                        pressed: BUTTON_PRESSED_BACKGROUND,
-                    },
+                    palette,
                     children![(content_bundle, Pickable::IGNORE,)],
                 ))
                 .insert(button_bundle)

@@ -2,7 +2,7 @@ use bevy::{platform::collections::HashMap, prelude::*};
 
 use super::{actor::Direction, program::Program};
 
-#[derive(Debug, Clone, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize, Component)]
 pub struct ActorType {
     pub name: String,
     pub program: Program,
@@ -15,6 +15,7 @@ pub struct ActorType {
     pub max_activations: u8,
     pub prize: u8,
     pub sprite_name: String,
+    pub cost: u32,
     #[serde(skip_deserializing)]
     pub sprite_handle: Option<Handle<Image>>,
 }

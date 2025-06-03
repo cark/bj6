@@ -2,9 +2,9 @@ use bevy::prelude::*;
 
 #[derive(Resource, Clone)]
 pub struct Game {
-    cash: u64,
-    turns_left: u64,
-    round: u32,
+    pub cash: u64,
+    pub turns_left: u64,
+    pub round: u32,
 }
 
 impl Default for Game {

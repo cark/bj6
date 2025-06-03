@@ -4,7 +4,7 @@ use crate::{
     demo::{GameplayState, level::LevelAssets},
     theme::{
         palette::HEADER_TEXT,
-        widget::{self, ButtonClick, Disabled, set_enabled},
+        widget::{self, ButtonClick, set_enabled},
     },
 };
 

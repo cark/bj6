@@ -2,7 +2,10 @@ use bevy::{platform::collections::HashSet, prelude::*};
 
 use crate::{asset_tracking::LoadResource, audio::sound_effect};
 
-use super::widget::Disabled;
+use super::{
+    palette::BUTTON_SELECTED_BORDER,
+    widget::{Disabled, Selected},
+};
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<InteractionPalette>();
@@ -14,6 +17,31 @@ pub(super) fn plugin(app: &mut App) {
     app.add_observer(play_on_hover_sound_effect);
     app.add_observer(play_on_click_sound_effect);
     app.add_observer(on_background_change_request);
+    app.add_observer(on_set_button_selected);
+}
+
+#[derive(Event, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SetButtonSelectedEvent(pub bool);
+
+fn on_set_button_selected(
+    trigger: Trigger<SetButtonSelectedEvent>,
+    mut commands: Commands,
+    // name: Query<&Name>,
+    mut border_color: Query<&mut BorderColor>,
+) {
+    let button = trigger.target();
+    let SetButtonSelectedEvent(selected) = trigger.event();
+    // let name = name.get(button).unwrap();
+    let mut border_color = border_color.get_mut(button).unwrap();
+    if *selected {
+        // warn!("true {} {button:?}", name);
+        commands.entity(button).insert(Selected);
+        *border_color = BorderColor(BUTTON_SELECTED_BORDER);
+    } else {
+        // warn!("false {} {button:?}", name);
+        commands.entity(button).remove::<Selected>();
+        *border_color = BorderColor(Color::linear_rgba(0.0, 0.0, 0.0, 0.0));
+    }
 }
 
 #[derive(Resource, Clone, Debug, Default)]

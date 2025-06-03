@@ -7,7 +7,7 @@ use crate::{
     asset_tracking::LoadResource,
     camera::MainCamera,
     data::game_config::GameConfig,
-    model::{actor::Actor, actor_type::ActorTypes, board::Board, game::Game},
+    model::{actor::Actor, actor_type::ActorTypes, board::Board, game::Game, shop::Shop},
     screens::Screen,
 };
 
@@ -25,6 +25,7 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Screen::Gameplay), enter);
     app.add_systems(OnExit(Screen::Gameplay), exit);
 }
+
 #[derive(Component)]
 struct Checker;
 
@@ -66,12 +67,17 @@ pub fn enter(mut commands: Commands, actor_types: Res<ActorTypes>) {
     let hammer_time_actor = Actor::new(&actor_types, "Start", ivec2(0, 0));
     let start_entity = commands.spawn(hammer_time_actor).id();
     let board = Board::new(start_entity);
+    let mut game = Game::default();
+    let mut shop = Shop::default();
+    shop.restock(&mut game, &actor_types);
     commands.insert_resource(board);
-    commands.insert_resource(Game::default());
+    commands.insert_resource(game);
+    commands.insert_resource(shop);
 }
 
 pub fn exit(mut commands: Commands) {
     commands.remove_resource::<Board>();
+    commands.remove_resource::<Shop>();
     commands.remove_resource::<Game>();
 }
 
