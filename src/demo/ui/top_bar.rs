@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::{
     demo::{GameplayState, level::LevelAssets},
     model::game::Game,
+    screens::Screen,
     theme::{
         palette::HEADER_TEXT,
         widget::{self, ButtonClick, set_enabled},
@@ -12,6 +13,8 @@ use crate::{
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(GameplayState::Placement), enable_shop_button);
     app.add_systems(OnExit(GameplayState::Placement), disable_shop_button);
+    app.add_systems(Update, update_top_bar.run_if(in_state(Screen::Gameplay)));
+    app.add_observer(on_update_top_bar);
 }
 
 #[derive(Event, Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -20,15 +23,51 @@ struct UpdateTopBarEvent;
 fn on_update_top_bar(
     _: Trigger<UpdateTopBarEvent>,
     game: Res<Game>,
-    current_gold_text: Single<&mut Text, With<CurrentGoldText>>,
-    required_gold_text: Single<&mut Text, With<RequiredGoldText>>,
-    turns_left_text: Single<&mut Text, With<TurnsLeftText>>,
-    round_text: Single<&mut Text, With<RoundText>>,
+    current_gold_text: Single<
+        &mut Text,
+        (
+            With<CurrentGoldText>,
+            Without<RequiredGoldText>,
+            Without<TurnsLeftText>,
+            Without<RoundText>,
+        ),
+    >,
+    required_gold_text: Single<
+        &mut Text,
+        (
+            With<RequiredGoldText>,
+            Without<CurrentGoldText>,
+            Without<TurnsLeftText>,
+            Without<RoundText>,
+        ),
+    >,
+    turns_left_text: Single<
+        &mut Text,
+        (
+            With<TurnsLeftText>,
+            Without<RoundText>,
+            Without<CurrentGoldText>,
+            Without<RequiredGoldText>,
+        ),
+    >,
+    round_text: Single<
+        &mut Text,
+        (
+            With<RoundText>,
+            Without<TurnsLeftText>,
+            Without<CurrentGoldText>,
+            Without<RequiredGoldText>,
+        ),
+    >,
 ) {
     current_gold_text.into_inner().0 = game.gold.to_string();
     required_gold_text.into_inner().0 = game.required_gold.to_string();
     turns_left_text.into_inner().0 = game.turns_left.to_string();
     round_text.into_inner().0 = game.round.to_string();
+}
+
+fn update_top_bar(mut commands: Commands) {
+    commands.trigger(UpdateTopBarEvent);
 }
 
 fn enable_shop_button(mut commands: Commands) {
@@ -184,7 +223,6 @@ pub(super) fn turns_left_ui(assets: &LevelAssets) -> impl Bundle {
                 }
             ),
             (
-                TurnsLeftText,
                 Text("left on".into()),
                 TextFont::from_font_size(TEXT_SIZE),
                 TextColor(HEADER_TEXT)
@@ -201,7 +239,7 @@ pub(super) fn turns_left_ui(assets: &LevelAssets) -> impl Bundle {
                 }
             ),
             (
-                TurnsLeftText,
+                RoundText,
                 Text("1".into()),
                 TextFont::from_font_size(TEXT_SIZE),
                 TextColor(HEADER_TEXT)
