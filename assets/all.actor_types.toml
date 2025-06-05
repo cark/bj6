@@ -2,6 +2,7 @@
 name = "Start"
 pushable = false
 dragable = false
+rotatable = false
 max_activations = 1
 prize = 1
 cost = 0
@@ -22,4 +23,12 @@ max_activations = 3
 prize = 1
 cost = 1
 sprite_name = "pusher.png"
-program = [{ type = "Forward", arg = "Front" }]
+program = [{ type = "Push", arg = "Front" }]
+
+[BowlingBall]
+name = "Bowling ball"
+max_activations = 3
+prize = 1
+cost = 2
+sprite_name = "bowling_ball.png"
+program = [{ type = "Forward" }, { type = "Hit", arg = [[0, 1]] }]

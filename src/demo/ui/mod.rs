@@ -10,7 +10,12 @@ use crate::{screens::Screen, theme::widget};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Screen::Gameplay), spawn_ui);
-    app.add_plugins((top_bar::plugin, shop::plugin, smart_text::plugin));
+    app.add_plugins((
+        top_bar::plugin,
+        shop::plugin,
+        smart_text::plugin,
+        actions::plugin,
+    ));
     // app.add_observer(on_shop_button_clicked);
 }
 

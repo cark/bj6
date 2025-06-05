@@ -10,6 +10,8 @@ pub struct ActorType {
     pub pushable: bool,
     #[serde(default = "default_as_true")]
     pub dragable: bool,
+    #[serde(default = "default_as_true")]
+    pub rotatable: bool,
     #[serde(default = "default_as_right")]
     pub looks_to: Direction,
     pub max_activations: u8,

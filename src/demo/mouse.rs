@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::{AppSystems, camera::MainCamera, screens::Screen, theme::interaction::ButtonHovering};
+use crate::{
+    AppSystems, camera::MainCamera, demo::ui::actions::SetActiveActionEvent, screens::Screen,
+    theme::interaction::ButtonHovering,
+};
 
 use super::{GameplayState, tile::HoveredActorEntity};
 
@@ -15,10 +18,34 @@ pub fn plugin(app: &mut App) {
             start_panning.run_if(in_state(MouseState::Normal)),
             stop_panning.run_if(in_state(MouseState::Pan)),
             update_mouse_coords,
+            update_actions
+                .run_if(in_state(GameplayState::Placement).or(in_state(GameplayState::Drag))),
         )
             .in_set(AppSystems::RecordInput)
             .run_if(in_state(Screen::Gameplay)),
     );
+    //app.add_systems()
+}
+
+fn update_actions(
+    mut commands: Commands,
+    button_hovering: Res<ButtonHovering>,
+    hovered_actor_entity: Res<HoveredActorEntity>,
+    gameplay_state: Res<State<GameplayState>>,
+) {
+    let button_hover = button_hovering.is_hovering();
+    let dragging = gameplay_state.get() == &GameplayState::Drag;
+    let actor_hover = hovered_actor_entity.is_some();
+
+    let (mmb_pan, lmb_mmb_pan) = match (button_hover, actor_hover, dragging) {
+        (true, _, _) => (false, false),
+        (false, true, _) => (true, false),
+        (false, _, true) => (true, false),
+        (false, false, false) => (false, true),
+    };
+    commands.trigger(SetActiveActionEvent("mmb_pan".to_string(), mmb_pan));
+    commands.trigger(SetActiveActionEvent("lmb_mmb_pan".to_string(), lmb_mmb_pan));
+    commands.trigger(SetActiveActionEvent("mmb_zoom".to_string(), true));
 }
 
 /// gameplay mouse states

@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::{
     AppSystems,
     data::game_config::GameConfig,
+    demo::ui::actions::SetActiveActionEvent,
     model::{actor::Actor, actor_type::ActorTypes, board::Board, game::Game, shop::Shop},
 };
 
@@ -16,7 +17,7 @@ use super::{
 pub(super) fn plugin(app: &mut App) {
     app.add_observer(on_start_drag);
     app.add_observer(on_cancel_drag);
-    app.add_observer(on_apply_drag);
+    app.add_observer(on_drop);
 
     app.add_systems(
         Update,
@@ -25,6 +26,45 @@ pub(super) fn plugin(app: &mut App) {
             .run_if(in_state(GameplayState::Drag)),
     );
     app.add_systems(OnExit(GameplayState::Drag), exit);
+    app.add_systems(
+        Update,
+        update_actions.run_if(in_state(GameplayState::Drag).or(in_state(GameplayState::Placement))),
+    );
+}
+
+fn update_actions(
+    mut commands: Commands,
+    hovered_actor_entity: Res<HoveredActorEntity>,
+    gameplay_state: Res<State<GameplayState>>,
+    drag: Option<Res<Drag>>,
+    q_actor: Query<&Actor>,
+) {
+    let dragging = gameplay_state.get() == &GameplayState::Drag;
+    let (hover_actor, can_drag) = if let Some(entity) = **hovered_actor_entity {
+        if let Ok(actor) = q_actor.get(entity) {
+            (true, actor.dragable)
+        } else {
+            (false, false)
+        }
+    } else {
+        (false, false)
+    };
+    let from_shop = if let Some(drag) = drag {
+        drag.source.is_from_shop()
+    } else {
+        false
+    };
+    let (drag, drop, cancel) = match (dragging, hover_actor, can_drag, from_shop) {
+        (false, true, true, _) => (true, false, false),
+        (false, _, _, _) => (false, false, false),
+        (true, true, true, false) => (false, true, true),
+        (true, true, true, true) => (false, false, true),
+        (true, true, false, _) => (false, false, true),
+        (true, _, _, _) => (false, true, true),
+    };
+    commands.trigger(SetActiveActionEvent("lmb_drag".to_string(), drag));
+    commands.trigger(SetActiveActionEvent("lmb_drop".to_string(), drop));
+    commands.trigger(SetActiveActionEvent("rmb_cancel_drag".to_string(), cancel));
 }
 
 #[derive(Resource, Debug, Clone)]
@@ -43,6 +83,17 @@ pub enum DragSource {
         dragged_entity: Entity,
         start_coord: IVec2,
     },
+}
+
+#[allow(dead_code)]
+impl DragSource {
+    pub fn is_from_board(&self) -> bool {
+        matches!(self, DragSource::Board { .. })
+    }
+
+    pub fn is_from_shop(&self) -> bool {
+        matches!(self, DragSource::Shop { .. })
+    }
 }
 
 #[derive(Event, Debug, Clone)]
@@ -180,7 +231,7 @@ fn on_cancel_drag(
     }
 }
 
-fn on_apply_drag(
+fn on_drop(
     _trigger: Trigger<ApplyDragEvent>,
     mut next_state: ResMut<NextState<GameplayState>>,
     mut commands: Commands,

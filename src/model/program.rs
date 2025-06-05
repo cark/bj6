@@ -3,7 +3,8 @@ use bevy::prelude::*;
 #[derive(Debug, Clone, serde::Deserialize)]
 #[serde(tag = "type", content = "arg")]
 pub enum Action {
-    Forward(Push),
+    Forward,
+    Push(Push),
     TurnLeft,
     TurnRight,
     TurnBack,
@@ -21,9 +22,3 @@ pub enum Push {
 
 #[derive(Debug, Clone, serde::Deserialize, Default)]
 pub struct Program(pub Vec<Action>);
-
-// impl Program {
-//     pub fn new(actions: Vec<Action>) -> Self {
-//         Self { actions }
-//     }
-// }

@@ -6,9 +6,10 @@ use bevy::prelude::*;
 pub struct Actor {
     pub actor_type: String,
     pub looks_to: Direction,
-    pub coord: IVec2,
+    // pub coord: IVec2,
     pub pushable: bool,
     pub dragable: bool,
+    pub rotatable: bool,
 }
 
 impl Actor {
@@ -17,10 +18,15 @@ impl Actor {
         Self {
             actor_type: type_name.to_string(),
             looks_to: actor_type.looks_to,
-            coord,
+            // coord,
             pushable: actor_type.pushable,
             dragable: actor_type.dragable,
+            rotatable: actor_type.rotatable,
         }
+    }
+
+    pub fn rotate(&mut self) {
+        self.looks_to = self.looks_to.rotate();
     }
 }
 
@@ -30,4 +36,15 @@ pub enum Direction {
     Down,
     Left,
     Right,
+}
+
+impl Direction {
+    pub fn rotate(self) -> Self {
+        match self {
+            Direction::Up => Direction::Right,
+            Direction::Right => Direction::Down,
+            Direction::Down => Direction::Left,
+            Direction::Left => Direction::Up,
+        }
+    }
 }
