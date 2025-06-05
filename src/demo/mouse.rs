@@ -5,7 +5,7 @@ use crate::{
     theme::interaction::ButtonHovering,
 };
 
-use super::{GameplayState, tile::HoveredActorEntity};
+use super::{GameplayState, tile::HoveredActor};
 
 pub fn plugin(app: &mut App) {
     app.init_state::<MouseState>();
@@ -30,7 +30,7 @@ pub fn plugin(app: &mut App) {
 fn update_actions(
     mut commands: Commands,
     button_hovering: Res<ButtonHovering>,
-    hovered_actor_entity: Res<HoveredActorEntity>,
+    hovered_actor_entity: Res<HoveredActor>,
     gameplay_state: Res<State<GameplayState>>,
 ) {
     let button_hover = button_hovering.is_hovering();
@@ -89,7 +89,7 @@ fn start_panning(
     button_hovering: Res<ButtonHovering>,
     gameplay_state: Res<State<GameplayState>>,
     mut pan_button: ResMut<PanButton>,
-    hovered_actor_entity: Res<HoveredActorEntity>,
+    hovered_actor_entity: Res<HoveredActor>,
     // mut window: Single<&mut Window>,
 ) {
     if !button_hovering.is_hovering() {

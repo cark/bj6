@@ -7,6 +7,8 @@ mod title;
 
 use bevy::prelude::*;
 
+use crate::demo::GameplayState;
+
 pub(super) fn plugin(app: &mut App) {
     app.init_state::<Screen>();
 
@@ -16,6 +18,8 @@ pub(super) fn plugin(app: &mut App) {
         splash::plugin,
         title::plugin,
     ));
+
+    app.add_systems(OnEnter(Screen::Gameplay), set_placement_substate);
 }
 
 /// The game's main screen states.
@@ -27,4 +31,8 @@ pub enum Screen {
     #[default]
     Loading,
     Gameplay,
+}
+
+fn set_placement_substate(mut next_state: ResMut<NextState<GameplayState>>) {
+    next_state.set(GameplayState::Placement);
 }

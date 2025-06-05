@@ -12,6 +12,7 @@ pub enum Action {
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
+// #[serde(tag = "push")]
 pub enum Push {
     None,
     Front,

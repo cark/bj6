@@ -8,10 +8,8 @@ tile_size = 40
 
 [game]
 start_gold = 3
+restock_multiplier = 1.5
 
 [drag]
 scale = 1.2
 alpha = 0.4
-
-[shop]
-restock_multiplier = 1.5

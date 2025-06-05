@@ -1,8 +1,6 @@
 pub mod actor;
 pub mod actor_type;
-pub mod actor_types;
 pub mod board;
-pub mod direction;
 pub mod game;
 pub mod program;
 pub mod shop;

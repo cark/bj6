@@ -4,21 +4,24 @@ use bevy::color::palettes::tailwind::*;
 use bevy::prelude::*;
 use bevy_tweening::{Animator, RepeatCount, RepeatStrategy, Tween, lens::TransformScaleLens};
 
-use crate::{AppSystems, data::game_config::GameConfig, model::board::Board, screens::Screen};
+use crate::{
+    AppSystems,
+    data::game_config::GameConfig,
+    model::{actor::ActorView, game::Game},
+    screens::Screen,
+};
 
-use super::{GameplayState, level::LevelAssets, mouse::MouseWorldCoords};
+use super::{GameplayState, actor::ActorEntities, level::LevelAssets, mouse::MouseWorldCoords};
 
 pub(super) fn plugin(app: &mut App) {
     app.init_resource::<HoveredTileCoord>();
-    app.init_resource::<HoveredActorEntity>();
-    // app.init_resource::<MyGizmosCoord>();
-    // app.init_gizmo_group::<MyGizmos>();
+    app.init_resource::<HoveredActor>();
     app.add_systems(
         Update,
         (
             (
                 update_hovered_tile_coord,
-                update_hovered_actor_entity,
+                update_hovered_actor,
                 show_selected_actor_tile.run_if(in_state(GameplayState::Placement)),
             )
                 .chain(),
@@ -34,11 +37,7 @@ pub(super) fn plugin(app: &mut App) {
 pub struct HoveredTileCoord(Option<IVec2>);
 
 #[derive(Resource, Debug, Default, Deref)]
-pub struct HoveredActorEntity(Option<Entity>);
-
-// We can create our own gizmo config group!
-// #[derive(Default, Reflect, GizmoConfigGroup)]
-// struct MyGizmos {}
+pub struct HoveredActor(Option<(Entity, ActorView)>);
 
 fn update_hovered_tile_coord(
     mut hovered_tile_coord: ResMut<HoveredTileCoord>,
@@ -80,13 +79,18 @@ pub fn world_coord_to_tile_coord(coord: Vec2, tile_size: f32) -> IVec2 {
     (coord / tile_size).floor().as_ivec2()
 }
 
-pub fn update_hovered_actor_entity(
+pub fn update_hovered_actor(
     hovered_tile_coord: Res<HoveredTileCoord>,
-    board: Res<Board>,
-    mut hovered_actor_entity: ResMut<HoveredActorEntity>,
+    game: Res<Game>,
+    mut hovered_actor: ResMut<HoveredActor>,
+    actor_entities: Res<ActorEntities>,
 ) {
-    // warn!("{hovered_tile_coord:?} {hovered_actor_entity:?}");
-    hovered_actor_entity.0 = hovered_tile_coord.and_then(|coord| board.get(coord))
+    hovered_actor.0 = hovered_tile_coord.and_then(|coord| {
+        let actor_id = game.board().coord_to_actor_id(&coord)?;
+        let actor_view = game.actor_view(&actor_id)?;
+        let entity = actor_entities.get(&actor_id)?;
+        Some((entity, actor_view))
+    });
 }
 
 #[derive(Component, Debug, Default)]
@@ -94,7 +98,7 @@ struct SelectedActorRect;
 
 fn show_selected_actor_tile(
     mut commands: Commands,
-    hovered_actor_entity: Res<HoveredActorEntity>,
+    hovered_actor_entity: Res<HoveredActor>,
     hovered_tile_coord: Res<HoveredTileCoord>,
     config: Res<GameConfig>,
     mut rects: Query<(Entity, &mut Transform), With<SelectedActorRect>>,

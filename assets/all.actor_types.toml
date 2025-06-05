@@ -1,4 +1,4 @@
-[Start]
+[start]
 name = "Start"
 pushable = false
 dragable = false
@@ -9,7 +9,7 @@ cost = 0
 sprite_name = "start.png"
 program = [{ type = "Hit", arg = [[0, 1]] }]
 
-[HammerTime]
+[hammer_time]
 name = "Hammer time"
 max_activations = 3
 prize = 1
@@ -17,7 +17,7 @@ cost = 1
 sprite_name = "hammer_time.png"
 program = [{ type = "Hit", arg = [[0, 1]] }]
 
-[Pusher]
+[pusher]
 name = "Pusher"
 max_activations = 3
 prize = 1
@@ -25,7 +25,7 @@ cost = 1
 sprite_name = "pusher.png"
 program = [{ type = "Push", arg = "Front" }]
 
-[BowlingBall]
+[bowling_ball]
 name = "Bowling ball"
 max_activations = 3
 prize = 1

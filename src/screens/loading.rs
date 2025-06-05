@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use crate::{
     asset_tracking::ResourceHandles,
     data::game_config::{GameConfig, GameConfigHandle},
-    model::actor_type::ActorTypesHandle,
+    model::actor_types::ActorTypesHandle,
     screens::Screen,
     theme::prelude::*,
 };

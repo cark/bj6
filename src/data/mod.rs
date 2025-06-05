@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy_common_assets::toml::TomlAssetPlugin;
 use game_config::GameConfig;
 
-use crate::{AppSystems, model::actor_type::ActorTypes};
+use crate::{AppSystems, model::actor_types::ActorTypes};
 
 pub mod game_config;
 

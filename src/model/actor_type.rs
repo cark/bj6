@@ -1,6 +1,15 @@
-use bevy::{platform::collections::HashMap, prelude::*};
+use bevy::prelude::*;
 
-use super::{actor::Direction, program::Program};
+use crate::model::{direction::Direction, program::Program};
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deref, serde::Deserialize, Component)]
+#[serde(transparent)]
+pub struct ActorTypeId(String);
+
+impl ActorTypeId {
+    pub fn new(id: String) -> Self {
+        Self(id)
+    }
+}
 
 #[derive(Debug, Clone, serde::Deserialize, Component)]
 pub struct ActorType {
@@ -29,31 +38,3 @@ fn default_as_true() -> bool {
 fn default_as_right() -> Direction {
     Direction::Right
 }
-
-// impl Default for ActorType {
-//     fn default() -> Self {
-//         Self {
-//             program: Program::default(),
-//             moveable: true,à
-//             max_activations: 1,
-//             activation_prize: 1,
-//             sprite_name: "".to_string(),
-//         }
-//     }
-// }
-
-#[derive(Debug, Clone, serde::Deserialize, Resource, Asset, TypePath)]
-pub struct ActorTypes(pub HashMap<String, ActorType>);
-
-impl ActorTypes {
-    pub fn get(&self, actor_type_id: &str) -> Option<&ActorType> {
-        self.0.get(actor_type_id)
-    }
-}
-
-#[derive(Resource)]
-#[allow(dead_code)]
-pub struct ActorTypesHandle(pub Handle<ActorTypes>);
-
-#[derive(Component, Debug, Clone)]
-pub struct ActorTypeId(pub String);

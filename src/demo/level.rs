@@ -7,8 +7,8 @@ use crate::{
     asset_tracking::LoadResource,
     camera::MainCamera,
     data::game_config::GameConfig,
-    demo::{GameplayState, actor::Coord, ui::actions::SetActiveActionEvent},
-    model::{actor::Actor, actor_type::ActorTypes, board::Board, game::Game, shop::Shop},
+    demo::{GameplayState, ui::actions::SetActiveActionEvent},
+    model::{actor_types::ActorTypes, game::Game},
     screens::Screen,
 };
 
@@ -17,13 +17,17 @@ use super::tile::tile_coord_to_world_coord;
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<LevelAssets>();
     app.load_resource::<LevelAssets>();
+
     app.add_systems(
         Update,
         spawn_center_checker
             .in_set(AppSystems::Update)
             .run_if(in_state(Screen::Gameplay)),
     );
-    app.add_systems(OnEnter(Screen::Gameplay), enter);
+    app.add_systems(
+        OnEnter(Screen::Gameplay),
+        enter.in_set(AppSystems::TickTimers),
+    );
     app.add_systems(OnExit(Screen::Gameplay), exit);
     app.add_systems(
         Update,
@@ -91,20 +95,25 @@ impl FromWorld for LevelAssets {
 }
 
 pub fn enter(mut commands: Commands, actor_types: Res<ActorTypes>, game_config: Res<GameConfig>) {
-    let hammer_time_actor = Actor::new(&actor_types, "Start", ivec2(0, 0));
-    let start_entity = commands.spawn((hammer_time_actor, Coord::new(0, 0))).id();
-    let board = Board::new(start_entity);
-    let mut game = Game::new(game_config.game.start_gold);
-    let mut shop = Shop::new(game_config.shop.restock_multiplier);
-    shop.restock(&mut game, &actor_types);
-    commands.insert_resource(board);
+    // let hammer_time_actor = Actor::new(&actor_types, "Start", ivec2(0, 0));
+    // let start_entity = commands.spawn((hammer_time_actor, Coord::new(0, 0))).id();
+    // let board = Board::new(start_entity);
+    let mut game = Game::new(&game_config.game, actor_types.clone());
+    game.restock();
+    //commands.spawn(())
+
+    // let mut shop = Shop::new(game_config.shop.restock_multiplier);
+    // shop.restock(&mut game, &actor_types);
+    // commands.insert_resource(board);
+    let start_actor_id = game.board().start_actor_id();
     commands.insert_resource(game);
-    commands.insert_resource(shop);
+    commands.spawn(start_actor_id);
+    // commands.insert_resource(shop);
 }
 
 pub fn exit(mut commands: Commands) {
-    commands.remove_resource::<Board>();
-    commands.remove_resource::<Shop>();
+    // commands.remove_resource::<Board>();
+    // commands.remove_resource::<Shop>();
     commands.remove_resource::<Game>();
 }
 

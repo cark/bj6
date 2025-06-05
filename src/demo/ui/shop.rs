@@ -4,13 +4,11 @@ use crate::{
     demo::{
         GameplayState,
         drag::{DragSource, StartDragEvent},
-        level::LevelAssets,
         ui::smart_text::{SmartText, UpdateNamedValueEvent},
     },
     model::{
-        actor_type::{self, ActorType, ActorTypeId, ActorTypes},
+        actor_type::{ActorType, ActorTypeId},
         game::Game,
-        shop::Shop,
     },
     theme::{
         interaction::SetButtonSelectedEvent,
@@ -55,14 +53,14 @@ fn on_update_buy_button(
     _: Trigger<UpdateBuyButtonEvent>,
     selected_actor_type: Res<SelectedActorType>,
     mut commands: Commands,
-    actor_types: Res<ActorTypes>,
     game: Res<Game>,
 ) {
     if let Some(ActorSelection { actor_type_id, .. }) = selected_actor_type.0.as_ref() {
-        let actor_type = actor_types
+        let actor_type = game
+            .actor_types()
             .get(actor_type_id)
             .expect("actor_type_id should be good!");
-        if actor_type.cost as u64 > game.gold {
+        if actor_type.cost as u64 > game.gold() {
             set_enabled::<BuyButton>(&mut commands, false);
         } else {
             set_enabled::<BuyButton>(&mut commands, true);
@@ -77,7 +75,7 @@ struct SelectedActorType(Option<ActorSelection>);
 
 #[derive(Clone, Debug)]
 struct ActorSelection {
-    actor_type_id: String,
+    actor_type_id: ActorTypeId,
     shop_index: usize,
 }
 
@@ -87,16 +85,14 @@ struct PopulateShopItemsEvent;
 fn on_populate_shop_items(
     trigger: Trigger<PopulateShopItemsEvent>,
     mut commands: Commands,
-    shop: Res<Shop>,
-    actor_types: Res<actor_type::ActorTypes>,
-    assets: Res<LevelAssets>,
+    game: Res<Game>,
 ) {
     let panel_entity = trigger.target();
     commands.entity(panel_entity).despawn_related::<Children>();
     commands.entity(panel_entity).with_children(|commands| {
-        for actor_type_id in shop.items.iter() {
-            let actor_type = actor_types.get(actor_type_id).unwrap();
-            commands.spawn(shop_item(actor_type, actor_type_id.clone(), &assets));
+        for actor_type_id in game.shop().stock() {
+            let actor_type = game.actor_types().get(actor_type_id).unwrap();
+            commands.spawn(shop_item(actor_type, actor_type_id.clone()));
         }
     });
 }
@@ -106,15 +102,12 @@ const ITEM_ICON_SIZE: f32 = 45.;
 #[derive(Debug, Clone, Component)]
 struct ShopItem;
 
-fn shop_item(actor_type: &ActorType, actor_type_id: String, assets: &LevelAssets) -> impl Bundle {
+fn shop_item(actor_type: &ActorType, actor_type_id: ActorTypeId) -> impl Bundle {
     (
         ShopItem,
-        ActorTypeId(actor_type_id),
+        actor_type_id,
         actor_type.clone(),
-        content_button(
-            shop_item_button_content(actor_type, assets),
-            shop_item_clicked,
-        ),
+        content_button(shop_item_button_content(actor_type), shop_item_clicked),
     )
 }
 
@@ -124,7 +117,7 @@ fn shop_item_clicked(
     child_of: Query<&ChildOf>,
     shop_items: Query<(Entity, &ActorTypeId), With<ShopItem>>,
     mut selected_actor_type: ResMut<SelectedActorType>,
-    shop: Res<Shop>,
+    game: Res<Game>,
 ) {
     let target = trigger.target();
     let parent = child_of.get(target).unwrap().parent();
@@ -133,8 +126,12 @@ fn shop_item_clicked(
         if item == parent {
             commands.trigger_targets(SetButtonSelectedEvent(true), item);
             selected_actor_type.0 = Some(ActorSelection {
-                actor_type_id: actor_type_id.0.clone(),
-                shop_index: shop.index_of(&actor_type_id.0).unwrap(),
+                actor_type_id: actor_type_id.clone(),
+                shop_index: game
+                    .shop()
+                    .stock()
+                    .position(|a| a == actor_type_id)
+                    .unwrap(),
             });
         } else {
             commands.trigger_targets(SetButtonSelectedEvent(false), item);
@@ -143,7 +140,7 @@ fn shop_item_clicked(
     commands.trigger(UpdateBuyButtonEvent);
 }
 
-fn shop_item_button_content(actor_type: &ActorType, assets: &LevelAssets) -> impl Bundle {
+fn shop_item_button_content(actor_type: &ActorType) -> impl Bundle {
     let font_size = 12.;
     (
         Node {
@@ -181,25 +178,6 @@ fn shop_item_button_content(actor_type: &ActorType, assets: &LevelAssets) -> imp
                     text: format!("{}{}", actor_type.cost, "{icon:coin}"),
                     font_size,
                 },
-                // children![
-                //     (
-                //         Pickable::IGNORE,
-                //         Text(format!("{} ", actor_type.cost)),
-                //         TextFont::from_font_size(font_size)
-                //     ),
-                //     (
-                //         Pickable::IGNORE,
-                //         ImageNode {
-                //             image: assets.coin.clone(),
-                //             ..default()
-                //         },
-                //         Node {
-                //             width: Val::Px(font_size),
-                //             height: Val::Px(font_size),
-                //             ..default()
-                //         }
-                //     ),
-                // ],
             ),
         ],
     )
@@ -339,14 +317,13 @@ struct UpdateRestockButtonEvent;
 fn on_update_restock_button(
     _: Trigger<UpdateRestockButtonEvent>,
     mut commands: Commands,
-    shop: Res<Shop>,
     game: Res<Game>,
 ) {
     commands.trigger(UpdateNamedValueEvent {
         name: "restock_cost".to_string(),
-        value: format!("{}", shop.restock_cost()),
+        value: format!("{}", game.shop().restock_cost()),
     });
-    if shop.can_restock(&game) {
+    if game.can_restock() {
         set_enabled::<RestockButton>(&mut commands, true);
     } else {
         set_enabled::<RestockButton>(&mut commands, false);
@@ -356,12 +333,10 @@ fn on_update_restock_button(
 fn on_restock_button_clicked(
     _: Trigger<ButtonClick>,
     mut commands: Commands,
-    mut shop: ResMut<Shop>,
     mut game: ResMut<Game>,
-    actor_types: Res<ActorTypes>,
     shop_items_panel: Single<Entity, With<ShopItemsPanel>>,
 ) {
-    shop.restock(&mut game, &actor_types);
+    game.restock();
     commands.trigger(UpdateRestockButtonEvent);
     commands.trigger(UpdateBuyButtonEvent);
     commands.trigger_targets(PopulateShopItemsEvent, shop_items_panel.into_inner());
@@ -403,9 +378,7 @@ fn on_close_shop_button_clicked(
 fn on_buy_button_clicked(
     _: Trigger<ButtonClick>,
     selected_actor_type: Res<SelectedActorType>,
-    mut shop: ResMut<Shop>,
     mut game: ResMut<Game>,
-    actor_types: Res<ActorTypes>,
     mut commands: Commands,
 ) {
     if let Some(ActorSelection {
@@ -413,8 +386,7 @@ fn on_buy_button_clicked(
         shop_index,
     }) = selected_actor_type.0.as_ref()
     {
-        // warn!("{actor_type_id}, {shop_index}");
-        if shop.take_item(actor_type_id, &mut game, &actor_types) {
+        if game.buy_item(actor_type_id) {
             commands.trigger(StartDragEvent {
                 actor_type_id: actor_type_id.clone(),
                 source: DragSource::Shop {

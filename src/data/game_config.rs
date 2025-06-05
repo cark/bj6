@@ -10,7 +10,6 @@ pub struct GameConfig {
     pub checker: Checker,
     pub game: GameGameConfig,
     pub drag: DragConfig,
-    pub shop: ShopConfig,
 }
 
 #[derive(serde::Deserialize, Resource, Clone, Copy)]
@@ -28,15 +27,11 @@ pub struct Checker {
 #[derive(serde::Deserialize, Resource, Clone, Copy)]
 pub struct GameGameConfig {
     pub start_gold: u64,
+    pub restock_multiplier: f32,
 }
 
 #[derive(serde::Deserialize, Resource, Clone, Copy)]
 pub struct DragConfig {
     pub scale: f32,
     pub alpha: f32,
-}
-
-#[derive(serde::Deserialize, Resource, Clone, Copy)]
-pub struct ShopConfig {
-    pub restock_multiplier: f32,
 }

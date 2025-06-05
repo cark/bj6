@@ -1,27 +1,28 @@
-use super::actor_type::ActorTypes;
-
+use crate::model::{
+    actor_type::{ActorType, ActorTypeId},
+    direction::Direction,
+};
 use bevy::prelude::*;
 
-#[derive(Debug, Clone, Component)]
+#[derive(Debug, Clone)]
 pub struct Actor {
-    pub actor_type: String,
+    pub actor_type_id: ActorTypeId,
     pub looks_to: Direction,
-    // pub coord: IVec2,
-    pub pushable: bool,
-    pub dragable: bool,
-    pub rotatable: bool,
+    pub activations_left: u8,
+    pub coord: IVec2,
 }
 
 impl Actor {
-    pub fn new(actor_types: &ActorTypes, type_name: &str, coord: IVec2) -> Self {
-        let actor_type = actor_types.get(type_name).unwrap();
+    pub fn from_actor_type(
+        actor_type_id: &ActorTypeId,
+        actor_type: &ActorType,
+        coord: IVec2,
+    ) -> Self {
         Self {
-            actor_type: type_name.to_string(),
+            actor_type_id: actor_type_id.clone(),
             looks_to: actor_type.looks_to,
-            // coord,
-            pushable: actor_type.pushable,
-            dragable: actor_type.dragable,
-            rotatable: actor_type.rotatable,
+            activations_left: actor_type.max_activations,
+            coord,
         }
     }
 
@@ -30,21 +31,18 @@ impl Actor {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize)]
-pub enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deref, Component)]
+pub struct ActorId(usize);
+
+impl ActorId {
+    pub fn new(value: usize) -> Self {
+        Self(value)
+    }
 }
 
-impl Direction {
-    pub fn rotate(self) -> Self {
-        match self {
-            Direction::Up => Direction::Right,
-            Direction::Right => Direction::Down,
-            Direction::Down => Direction::Left,
-            Direction::Left => Direction::Up,
-        }
-    }
+#[derive(Debug, Clone)]
+pub struct ActorView {
+    pub actor_id: ActorId,
+    pub actor: Actor,
+    pub actor_type: ActorType,
 }

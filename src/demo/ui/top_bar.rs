@@ -23,21 +23,21 @@ struct UpdateTopBarEvent;
 fn on_update_top_bar(_: Trigger<UpdateTopBarEvent>, mut commands: Commands, game: Res<Game>) {
     commands.trigger(UpdateNamedValueEvent {
         name: "current_gold".to_string(),
-        value: game.gold.to_string(),
+        value: game.gold().to_string(),
     });
 
     commands.trigger(UpdateNamedValueEvent {
         name: "required_gold".to_string(),
-        value: game.required_gold.to_string(),
+        value: game.required_gold().to_string(),
     });
     commands.trigger(UpdateNamedValueEvent {
         name: "turns_left".to_string(),
-        value: game.turns_left.to_string(),
+        value: game.turns_left().to_string(),
     });
 
     commands.trigger(UpdateNamedValueEvent {
         name: "round".to_string(),
-        value: game.round.to_string(),
+        value: game.round().to_string(),
     });
 }
 
