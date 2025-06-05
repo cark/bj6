@@ -1,4 +1,4 @@
-use bevy::{picking::hover, prelude::*};
+use bevy::prelude::*;
 
 use crate::{
     data::game_config::GameConfig,

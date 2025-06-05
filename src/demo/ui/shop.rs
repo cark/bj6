@@ -5,6 +5,7 @@ use crate::{
         GameplayState,
         drag::{DragSource, StartDragEvent},
         level::LevelAssets,
+        ui::smart_text::{SmartText, UpdateNamedValueEvent},
     },
     model::{
         actor_type::{self, ActorType, ActorTypeId, ActorTypes},
@@ -143,7 +144,7 @@ fn shop_item_clicked(
 }
 
 fn shop_item_button_content(actor_type: &ActorType, assets: &LevelAssets) -> impl Bundle {
-    let font_size = 14.;
+    let font_size = 12.;
     (
         Node {
             align_items: AlignItems::Center,
@@ -176,25 +177,29 @@ fn shop_item_button_content(actor_type: &ActorType, assets: &LevelAssets) -> imp
                     ..default()
                 },
                 Pickable::IGNORE,
-                children![
-                    (
-                        Pickable::IGNORE,
-                        Text(format!("{} ", actor_type.cost)),
-                        TextFont::from_font_size(font_size)
-                    ),
-                    (
-                        Pickable::IGNORE,
-                        ImageNode {
-                            image: assets.coin.clone(),
-                            ..default()
-                        },
-                        Node {
-                            width: Val::Px(font_size),
-                            height: Val::Px(font_size),
-                            ..default()
-                        }
-                    ),
-                ],
+                SmartText {
+                    text: format!("{}{}", actor_type.cost, "{icon:coin}"),
+                    font_size,
+                },
+                // children![
+                //     (
+                //         Pickable::IGNORE,
+                //         Text(format!("{} ", actor_type.cost)),
+                //         TextFont::from_font_size(font_size)
+                //     ),
+                //     (
+                //         Pickable::IGNORE,
+                //         ImageNode {
+                //             image: assets.coin.clone(),
+                //             ..default()
+                //         },
+                //         Node {
+                //             width: Val::Px(font_size),
+                //             height: Val::Px(font_size),
+                //             ..default()
+                //         }
+                //     ),
+                // ],
             ),
         ],
     )
@@ -207,20 +212,16 @@ fn items_panel_added(
     commands.trigger_targets(PopulateShopItemsEvent, shop_items_panel.into_inner());
 }
 
-fn spawn_shop(
-    mut commands: Commands,
-    content_panel: Single<Entity, With<ContentPanel>>,
-    assets: Res<LevelAssets>,
-) {
+fn spawn_shop(mut commands: Commands, content_panel: Single<Entity, With<ContentPanel>>) {
     let content_panel = content_panel.into_inner();
     commands.entity(content_panel).with_children(|commands| {
-        commands.spawn(shop_window(&assets));
+        commands.spawn(shop_window());
     });
 }
 
 const TITLE_TEXT_SIZE: f32 = 30.;
 
-fn shop_window(assets: &LevelAssets) -> impl Bundle {
+fn shop_window() -> impl Bundle {
     (
         Name::new("Shop Window"),
         Node {
@@ -237,7 +238,7 @@ fn shop_window(assets: &LevelAssets) -> impl Bundle {
         },
         BackgroundColor(Color::linear_rgba(0.0, 0.0, 0.0, 0.8)),
         StateScoped(GameplayState::Shop),
-        children![title_bar(), content(assets), buttons()],
+        children![title_bar(), content(), buttons()],
     )
 }
 
@@ -262,7 +263,7 @@ fn title_bar() -> impl Bundle {
     )
 }
 
-fn content(assets: &LevelAssets) -> impl Bundle {
+fn content() -> impl Bundle {
     (
         Node {
             flex_grow: 1.0,
@@ -272,14 +273,14 @@ fn content(assets: &LevelAssets) -> impl Bundle {
             align_items: AlignItems::FlexStart,
             ..default()
         },
-        children![items_panel(assets)],
+        children![items_panel()],
     )
 }
 
 #[derive(Component)]
 pub struct ShopItemsPanel;
 
-fn items_panel(assets: &LevelAssets) -> impl Bundle {
+fn items_panel() -> impl Bundle {
     (
         Node {
             height: Percent(100.),
@@ -305,10 +306,7 @@ fn items_panel(assets: &LevelAssets) -> impl Bundle {
             ),
             (
                 RestockButton,
-                widget::content_button(
-                    restock_button_content(1, HEADER_TEXT, assets),
-                    on_restock_button_clicked
-                ),
+                widget::content_button(restock_button_content(), on_restock_button_clicked),
             )
         ],
     )
@@ -320,8 +318,7 @@ pub struct RestockCostText;
 #[derive(Component)]
 pub struct RestockButton;
 
-fn restock_button_content(gold: u32, gold_color: Color, assets: &LevelAssets) -> impl Bundle {
-    let font_size = 14.;
+fn restock_button_content() -> impl Bundle {
     (
         Node {
             flex_direction: FlexDirection::Row,
@@ -329,33 +326,10 @@ fn restock_button_content(gold: u32, gold_color: Color, assets: &LevelAssets) ->
             align_items: AlignItems::Center,
             ..Default::default()
         },
-        children![
-            (
-                Pickable::IGNORE,
-                Text("Restock: ".to_string()),
-                TextFont::from_font_size(font_size),
-                TextColor(HEADER_TEXT),
-            ),
-            (
-                Pickable::IGNORE,
-                RestockCostText,
-                Text(format!("{gold}").to_string()),
-                TextFont::from_font_size(font_size),
-                TextColor(gold_color),
-            ),
-            (
-                Pickable::IGNORE,
-                ImageNode {
-                    image: assets.coin.clone(),
-                    ..default()
-                },
-                Node {
-                    width: Val::Px(font_size),
-                    height: Val::Px(font_size),
-                    ..default()
-                }
-            ),
-        ],
+        SmartText {
+            text: "Restock: {named:restock_cost}{icon:coin}".to_string(), //"coucou mamma brains".to_string(),
+            font_size: 14.,
+        },
     )
 }
 
@@ -367,9 +341,11 @@ fn on_update_restock_button(
     mut commands: Commands,
     shop: Res<Shop>,
     game: Res<Game>,
-    restock_cost_text: Single<&mut Text, With<RestockCostText>>,
 ) {
-    restock_cost_text.into_inner().0 = format!("{}", shop.restock_cost());
+    commands.trigger(UpdateNamedValueEvent {
+        name: "restock_cost".to_string(),
+        value: format!("{}", shop.restock_cost()),
+    });
     if shop.can_restock(&game) {
         set_enabled::<RestockButton>(&mut commands, true);
     } else {

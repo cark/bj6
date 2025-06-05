@@ -24,6 +24,8 @@ ron = { version = "0.10" }
 im = "15.1"
 thiserror = "2.0"
 bevy_tweening = "0.13"
+nom = "8.0"
+
 
 # Your web builds will start failing if you add a dependency that pulls in `getrandom` v0.3+.
 # To fix this, you should tell `getrandom` to use the `wasm_js` backend on Wasm.

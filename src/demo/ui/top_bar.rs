@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 
 use crate::{
-    demo::{GameplayState, level::LevelAssets},
+    demo::{
+        GameplayState,
+        ui::smart_text::{SmartText, UpdateNamedValueEvent},
+    },
     model::game::Game,
     screens::Screen,
-    theme::{
-        palette::HEADER_TEXT,
-        widget::{self, ButtonClick, set_enabled},
-    },
+    theme::widget::{self, ButtonClick, set_enabled},
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -20,50 +20,25 @@ pub(super) fn plugin(app: &mut App) {
 #[derive(Event, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct UpdateTopBarEvent;
 
-fn on_update_top_bar(
-    _: Trigger<UpdateTopBarEvent>,
-    game: Res<Game>,
-    current_gold_text: Single<
-        &mut Text,
-        (
-            With<CurrentGoldText>,
-            Without<RequiredGoldText>,
-            Without<TurnsLeftText>,
-            Without<RoundText>,
-        ),
-    >,
-    required_gold_text: Single<
-        &mut Text,
-        (
-            With<RequiredGoldText>,
-            Without<CurrentGoldText>,
-            Without<TurnsLeftText>,
-            Without<RoundText>,
-        ),
-    >,
-    turns_left_text: Single<
-        &mut Text,
-        (
-            With<TurnsLeftText>,
-            Without<RoundText>,
-            Without<CurrentGoldText>,
-            Without<RequiredGoldText>,
-        ),
-    >,
-    round_text: Single<
-        &mut Text,
-        (
-            With<RoundText>,
-            Without<TurnsLeftText>,
-            Without<CurrentGoldText>,
-            Without<RequiredGoldText>,
-        ),
-    >,
-) {
-    current_gold_text.into_inner().0 = game.gold.to_string();
-    required_gold_text.into_inner().0 = game.required_gold.to_string();
-    turns_left_text.into_inner().0 = game.turns_left.to_string();
-    round_text.into_inner().0 = game.round.to_string();
+fn on_update_top_bar(_: Trigger<UpdateTopBarEvent>, mut commands: Commands, game: Res<Game>) {
+    commands.trigger(UpdateNamedValueEvent {
+        name: "current_gold".to_string(),
+        value: game.gold.to_string(),
+    });
+
+    commands.trigger(UpdateNamedValueEvent {
+        name: "required_gold".to_string(),
+        value: game.required_gold.to_string(),
+    });
+    commands.trigger(UpdateNamedValueEvent {
+        name: "turns_left".to_string(),
+        value: game.turns_left.to_string(),
+    });
+
+    commands.trigger(UpdateNamedValueEvent {
+        name: "round".to_string(),
+        value: game.round.to_string(),
+    });
 }
 
 fn update_top_bar(mut commands: Commands) {
@@ -78,7 +53,7 @@ fn disable_shop_button(mut commands: Commands) {
     set_enabled::<ShopButton>(&mut commands, false);
 }
 
-pub(super) fn top_bar_ui(assets: &LevelAssets) -> impl Bundle {
+pub(super) fn top_bar_ui() -> impl Bundle {
     (
         Name::new("Top Bar"),
         Node {
@@ -96,11 +71,7 @@ pub(super) fn top_bar_ui(assets: &LevelAssets) -> impl Bundle {
             ..default()
         },
         Pickable::IGNORE,
-        children![
-            gold_ui(assets),
-            shop_button_part_ui(),
-            turns_left_ui(assets)
-        ],
+        children![gold_ui(), shop_button_part_ui(), turns_left_ui()],
     )
 }
 
@@ -110,50 +81,21 @@ struct CurrentGoldText;
 #[derive(Component)]
 struct RequiredGoldText;
 
-const ICON_SIZE: f32 = 40.;
 const TEXT_SIZE: f32 = 25.;
 
-pub(super) fn gold_ui(assets: &LevelAssets) -> impl Bundle {
+pub(super) fn gold_ui() -> impl Bundle {
     (
         Name::new("Gold Part"),
         Node {
             align_items: AlignItems::Center,
             justify_content: JustifyContent::FlexStart,
             flex_direction: FlexDirection::Row,
-            column_gap: Val::Px(10.0),
             ..default()
         },
-        children![
-            (
-                CurrentGoldText,
-                Text("1256".into()),
-                TextFont::from_font_size(TEXT_SIZE),
-                TextColor(HEADER_TEXT)
-            ),
-            (
-                Text("/".into()),
-                TextFont::from_font_size(TEXT_SIZE),
-                TextColor(HEADER_TEXT)
-            ),
-            (
-                RequiredGoldText,
-                Text("1256".into()),
-                TextFont::from_font_size(TEXT_SIZE),
-                TextColor(HEADER_TEXT)
-            ),
-            (
-                ImageNode {
-                    image: assets.coin.clone(),
-                    // image_mode: NodeImageMode::Stretch,
-                    ..default()
-                },
-                Node {
-                    width: Val::Px(ICON_SIZE),
-                    height: Val::Px(ICON_SIZE),
-                    ..default()
-                }
-            ),
-        ],
+        SmartText {
+            font_size: TEXT_SIZE,
+            text: "{named:current_gold}{icon:coin} / {named:required_gold}{icon:coin}".to_string(),
+        },
     )
 }
 
@@ -194,56 +136,18 @@ struct TurnsLeftText;
 #[derive(Component)]
 struct RoundText;
 
-pub(super) fn turns_left_ui(assets: &LevelAssets) -> impl Bundle {
+pub(super) fn turns_left_ui() -> impl Bundle {
     (
         Name::new("Turns left part"),
         Node {
             align_items: AlignItems::Center,
             justify_content: JustifyContent::FlexStart,
             flex_direction: FlexDirection::Row,
-            column_gap: Val::Px(10.0),
             ..default()
         },
-        children![
-            (
-                TurnsLeftText,
-                Text("5".into()),
-                TextFont::from_font_size(TEXT_SIZE),
-                TextColor(HEADER_TEXT)
-            ),
-            (
-                ImageNode {
-                    image: assets.turn.clone(),
-                    ..default()
-                },
-                Node {
-                    width: Val::Px(ICON_SIZE),
-                    height: Val::Px(ICON_SIZE),
-                    ..default()
-                }
-            ),
-            (
-                Text("left on".into()),
-                TextFont::from_font_size(TEXT_SIZE),
-                TextColor(HEADER_TEXT)
-            ),
-            (
-                ImageNode {
-                    image: assets.round.clone(),
-                    ..default()
-                },
-                Node {
-                    width: Val::Px(ICON_SIZE),
-                    height: Val::Px(ICON_SIZE),
-                    ..default()
-                }
-            ),
-            (
-                RoundText,
-                Text("1".into()),
-                TextFont::from_font_size(TEXT_SIZE),
-                TextColor(HEADER_TEXT)
-            ),
-        ],
+        SmartText {
+            font_size: TEXT_SIZE,
+            text: "{named:turns_left}{icon:turn} left on {icon:round}{named:round}".to_string(),
+        },
     )
 }
