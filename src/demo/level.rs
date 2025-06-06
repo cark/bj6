@@ -95,25 +95,14 @@ impl FromWorld for LevelAssets {
 }
 
 pub fn enter(mut commands: Commands, actor_types: Res<ActorTypes>, game_config: Res<GameConfig>) {
-    // let hammer_time_actor = Actor::new(&actor_types, "Start", ivec2(0, 0));
-    // let start_entity = commands.spawn((hammer_time_actor, Coord::new(0, 0))).id();
-    // let board = Board::new(start_entity);
     let mut game = Game::new(&game_config.game, actor_types.clone());
     game.restock();
-    //commands.spawn(())
-
-    // let mut shop = Shop::new(game_config.shop.restock_multiplier);
-    // shop.restock(&mut game, &actor_types);
-    // commands.insert_resource(board);
     let start_actor_id = game.board().start_actor_id();
     commands.insert_resource(game);
     commands.spawn(start_actor_id);
-    // commands.insert_resource(shop);
 }
 
 pub fn exit(mut commands: Commands) {
-    // commands.remove_resource::<Board>();
-    // commands.remove_resource::<Shop>();
     commands.remove_resource::<Game>();
 }
 

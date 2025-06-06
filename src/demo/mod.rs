@@ -32,6 +32,8 @@ pub enum GameplayState {
     WorkaroundBugs,
     Placement,
     Shop,
+    TurnStartup,
+    Turn,
     Drag,
     // Run,
 }

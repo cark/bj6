@@ -33,11 +33,11 @@ pub fn plugin(app: &mut App) {
     );
 }
 
-#[derive(Debug, Clone, Resource)]
+#[derive(Debug, Clone, Copy, Resource)]
 
-struct CameraDestination {
-    translation: Vec2,
-    scale: f32,
+pub struct CameraDestination {
+    pub translation: Vec2,
+    pub scale: f32,
 }
 
 fn move_camera(
@@ -117,7 +117,7 @@ fn zoom_destination(
     }
 }
 
-fn calc_scale_bounds(window_width: f32, window_height: f32, config: &GameConfig) -> (f32, f32) {
+pub fn calc_scale_bounds(window_width: f32, window_height: f32, config: &GameConfig) -> (f32, f32) {
     let tile_size = config.checker.tile_size;
     let zoom_min = config.camera.zoom_min_tiles;
     let zoom_max = config.camera.zoom_max_tiles;
@@ -139,6 +139,7 @@ fn calc_scale_bounds(window_width: f32, window_height: f32, config: &GameConfig)
 
     (min_scale, max_scale)
 }
+
 fn apply_zoom_limits(
     window: Single<&Window>,
     mut destination: ResMut<CameraDestination>,

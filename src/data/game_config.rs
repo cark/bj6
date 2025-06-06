@@ -10,6 +10,7 @@ pub struct GameConfig {
     pub checker: Checker,
     pub game: GameGameConfig,
     pub drag: DragConfig,
+    pub ui: UiConfig,
 }
 
 #[derive(serde::Deserialize, Resource, Clone, Copy)]
@@ -34,4 +35,10 @@ pub struct GameGameConfig {
 pub struct DragConfig {
     pub scale: f32,
     pub alpha: f32,
+}
+
+#[derive(serde::Deserialize, Resource, Clone, Copy)]
+pub struct UiConfig {
+    pub turn_startup_duration: f32,
+    pub turn_startup_shake: f32,
 }

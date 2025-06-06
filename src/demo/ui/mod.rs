@@ -1,6 +1,7 @@
 pub mod actions;
 pub mod shop;
 pub mod smart_text;
+pub mod startup_bar;
 mod top_bar;
 
 use bevy::prelude::*;
@@ -15,6 +16,7 @@ pub(super) fn plugin(app: &mut App) {
         shop::plugin,
         smart_text::plugin,
         actions::plugin,
+        startup_bar::plugin,
     ));
     // app.add_observer(on_shop_button_clicked);
 }
