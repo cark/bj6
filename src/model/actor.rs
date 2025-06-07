@@ -1,15 +1,16 @@
 use crate::model::{
     actor_type::{ActorType, ActorTypeId},
-    direction::Direction,
+    direction::Dir,
 };
 use bevy::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct Actor {
     pub actor_type_id: ActorTypeId,
-    pub looks_to: Direction,
+    pub looks_to: Dir,
     pub activations_left: u8,
     pub coord: IVec2,
+    pub activated: bool,
 }
 
 impl Actor {
@@ -23,6 +24,7 @@ impl Actor {
             looks_to: actor_type.looks_to,
             activations_left: actor_type.max_activations,
             coord,
+            activated: false,
         }
     }
 
@@ -31,7 +33,7 @@ impl Actor {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deref, Component)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deref, Component, Default)]
 pub struct ActorId(usize);
 
 impl ActorId {

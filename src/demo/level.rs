@@ -8,7 +8,7 @@ use crate::{
     camera::MainCamera,
     data::game_config::GameConfig,
     demo::{GameplayState, ui::actions::SetActiveActionEvent},
-    model::{actor_types::ActorTypes, game::Game},
+    model::{actor::ActorId, actor_types::ActorTypes, game::Game},
     screens::Screen,
 };
 
@@ -33,11 +33,16 @@ pub(super) fn plugin(app: &mut App) {
         Update,
         update_actions.run_if(in_state(GameplayState::Placement)),
     );
+
+    app.add_observer(on_reset_board);
 }
 
 fn update_actions(mut commands: Commands) {
     commands.trigger(SetActiveActionEvent("start_turn".to_string(), true));
 }
+
+#[derive(Event, Debug)]
+pub struct ResetBoardEvent;
 
 #[derive(Component)]
 struct Checker;
@@ -67,6 +72,10 @@ pub struct LevelAssets {
     pub mmb: Handle<Image>,
     #[dependency]
     pub rotate: Handle<Image>,
+    #[dependency]
+    pub puff: Handle<Image>,
+    #[dependency]
+    pub activation: Handle<Image>,
     // music: Handle<AudioSource>,
 }
 
@@ -89,6 +98,8 @@ impl FromWorld for LevelAssets {
             rmb: assets.load("images/rmb.png"),
             mmb: assets.load("images/mmb.png"),
             rotate: assets.load("images/rotate.png"),
+            puff: assets.load("images/puff.png"),
+            activation: assets.load("images/activation.png"),
             //music: assets.load("audio/music/Fluffing A Duck.ogg"),
         }
     }
@@ -159,4 +170,19 @@ fn spawn_center_checker(
         .translation
         .div_euclid(Vec3::splat(tile_size * 2.0))
         * Vec3::splat(tile_size * 2.0);
+}
+
+fn on_reset_board(
+    _trigger: Trigger<ResetBoardEvent>,
+    game: Res<Game>,
+    mut commands: Commands,
+    q_actor: Query<Entity, With<ActorId>>,
+) {
+    for entity in q_actor.iter() {
+        commands.entity(entity).despawn();
+    }
+    let game = game.clone();
+    for id in game.board().actor_ids() {
+        commands.spawn(*id);
+    }
 }

@@ -7,7 +7,7 @@ max_activations = 1
 prize = 1
 cost = 0
 sprite_name = "start.png"
-program = [{ type = "Hit", arg = [[0, 1]] }]
+program = [{ type = "Hit", arg = [[1, 0]] }]
 
 [hammer_time]
 name = "Hammer time"
@@ -15,7 +15,7 @@ max_activations = 3
 prize = 1
 cost = 1
 sprite_name = "hammer_time.png"
-program = [{ type = "Hit", arg = [[0, 1]] }]
+program = [{ type = "Hit", arg = [[1, 0]] }]
 
 [pusher]
 name = "Pusher"
@@ -31,4 +31,14 @@ max_activations = 3
 prize = 1
 cost = 2
 sprite_name = "bowling_ball.png"
-program = [{ type = "Forward" }, { type = "Hit", arg = [[0, 1]] }]
+program = [
+    { type = "Forward" },
+    { type = "Forward" },
+    { type = "Forward" },
+    { type = "Hit", arg = [
+        [
+            1,
+            0,
+        ],
+    ] },
+]

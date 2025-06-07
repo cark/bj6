@@ -7,7 +7,7 @@ use crate::model::{
     actor_types::ActorTypes,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Board {
     next_actor_id: usize,
     actor_id_to_actor: im::HashMap<ActorId, Actor>,
@@ -76,15 +76,20 @@ impl Board {
     /// updates a clone of the existing actor, then place that clone back in the store
     pub fn update_actor(&mut self, actor_id: &ActorId, f: impl FnOnce(&mut Actor)) {
         if let Some(mut actor) = self.actor_id_to_actor.get(actor_id).cloned() {
+            // let old = self.actor_id_to_actor.get(actor_id).unwrap().clone();
             let old_coord = actor.coord;
             f(&mut actor);
             let new_coord = actor.coord;
 
             actor.coord = old_coord;
+            // self.actor_id_to_actor = self.actor_id_to_actor.update(*actor_id, actor);
             self.actor_id_to_actor.insert(*actor_id, actor);
             if old_coord != new_coord {
                 self.swap_coords(old_coord, new_coord);
             }
+            // let new = self.actor_id_to_actor.get(actor_id).unwrap();
+            // warn!("old : {:#?} ", old);
+            // warn!("new : {:#?}", new);
         }
     }
 

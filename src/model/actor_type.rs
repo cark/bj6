@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::model::{direction::Direction, program::Program};
+use crate::model::{direction::Dir, program::Program};
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deref, serde::Deserialize, Component)]
 #[serde(transparent)]
 pub struct ActorTypeId(String);
@@ -22,7 +22,7 @@ pub struct ActorType {
     #[serde(default = "default_as_true")]
     pub rotatable: bool,
     #[serde(default = "default_as_right")]
-    pub looks_to: Direction,
+    pub looks_to: Dir,
     pub max_activations: u8,
     pub prize: u8,
     pub sprite_name: String,
@@ -35,6 +35,6 @@ fn default_as_true() -> bool {
     true
 }
 
-fn default_as_right() -> Direction {
-    Direction::Right
+fn default_as_right() -> Dir {
+    Dir::Right
 }

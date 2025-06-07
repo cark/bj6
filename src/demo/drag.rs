@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::{
     AppSystems,
     data::game_config::GameConfig,
-    demo::ui::actions::SetActiveActionEvent,
+    demo::{puff::SpawDropParticlesEvent, ui::actions::SetActiveActionEvent},
     model::{actor::ActorId, actor_type::ActorTypeId, game::Game},
 };
 
@@ -242,6 +242,7 @@ fn on_drop(
                         actor_type_id: drag.actor_type_id.clone(),
                         coord: *coord,
                     });
+                    commands.trigger(SpawDropParticlesEvent(*coord));
                     next_state.set(GameplayState::Placement);
                 }
             }
@@ -252,12 +253,14 @@ fn on_drop(
         } => {
             if let Some(target_coord) = **hovered_tile_coord {
                 if drag.can_drop {
+                    commands.trigger(SpawDropParticlesEvent(target_coord));
                     game.swap_coords(start_coord, target_coord);
                     if let Some((target_entity, _actor_view)) = &**hovered_actor {
                         *q_tr.get_mut(*target_entity).unwrap() = Transform::from_translation(
                             tile_coord_to_world_coord(start_coord, config.checker.tile_size)
                                 .extend(2.0),
                         );
+                        commands.trigger(SpawDropParticlesEvent(start_coord));
                     }
                     *q_tr.get_mut(dragged_entity).unwrap() = Transform::from_translation(
                         tile_coord_to_world_coord(target_coord, config.checker.tile_size)

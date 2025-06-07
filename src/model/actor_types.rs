@@ -2,7 +2,7 @@ use bevy::{platform::collections::HashMap, prelude::*};
 
 use crate::model::actor_type::{ActorType, ActorTypeId};
 
-#[derive(Debug, Clone, serde::Deserialize, Resource, Asset, TypePath)]
+#[derive(Debug, Clone, serde::Deserialize, Resource, Asset, TypePath, Default)]
 pub struct ActorTypes(pub HashMap<ActorTypeId, ActorType>);
 
 impl ActorTypes {

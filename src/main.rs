@@ -58,15 +58,15 @@ impl Plugin for AppPlugin {
 
         // Add other plugins.
         app.add_plugins((
-            data::plugin,
             asset_tracking::plugin,
+            data::plugin,
             audio::plugin,
-            demo::plugin,
             #[cfg(feature = "dev")]
             dev_tools::plugin,
-            menus::plugin,
             screens::plugin,
+            menus::plugin,
             theme::plugin,
+            demo::plugin,
         ));
 
         // Order new `AppSystems` variants by adding them here:

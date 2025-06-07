@@ -6,7 +6,7 @@ use crate::{
     AppSystems,
     data::game_config::GameConfig,
     demo::ui::actions::SetActiveActionEvent,
-    model::{actor::ActorId, actor_type::ActorTypeId, direction::Direction, game::Game},
+    model::{actor::ActorId, actor_type::ActorTypeId, direction::Dir, game::Game},
     screens::Screen,
 };
 
@@ -30,6 +30,8 @@ pub(super) fn plugin(app: &mut App) {
     );
 }
 
+pub const ACTOR_Z: f32 = 2.0;
+
 #[derive(Resource, Default, Debug, Clone)]
 pub struct ActorEntities(HashMap<ActorId, Entity>);
 
@@ -47,19 +49,19 @@ pub fn on_actor_rotation_fixup(
     for (actor, mut tr, mut sprite) in &mut q_actor {
         let actor = game.actor_view(actor).unwrap();
         match actor.actor.looks_to {
-            Direction::Front => {
+            Dir::Up => {
                 tr.rotation = Quat::from_rotation_z(PI / 2.0);
                 sprite.flip_x = false;
             }
-            Direction::Behind => {
+            Dir::Down => {
                 tr.rotation = Quat::from_rotation_z(-PI / 2.0);
                 sprite.flip_x = false;
             }
-            Direction::Left => {
+            Dir::Left => {
                 tr.rotation = Quat::from_rotation_z(0.);
                 sprite.flip_x = true;
             }
-            Direction::Right => {
+            Dir::Right => {
                 tr.rotation = Quat::from_rotation_z(0.);
                 sprite.flip_x = false;
             }
@@ -102,14 +104,23 @@ pub fn on_actor_spawned(
     let actor_view = game.actor_view(&actor_id).unwrap();
 
     let translation = tile_coord_to_world_coord(actor_view.actor.coord, config.checker.tile_size);
+    let rotation = match actor_view.actor.looks_to {
+        Dir::Up => Quat::from_rotation_z(PI / 2.0),
+        Dir::Down => Quat::from_rotation_z(-PI / 2.0),
+        Dir::Left => Quat::from_rotation_z(0.),
+        Dir::Right => Quat::from_rotation_z(0.),
+    };
+    let flip_x = matches!(actor_view.actor.looks_to, Dir::Left);
+
     commands.entity(entity).insert((
         StateScoped(Screen::Gameplay),
         Visibility::default(),
         Name::new(actor_view.actor_type.name.clone()),
-        Transform::from_translation(translation.extend(2.0)),
+        Transform::from_translation(translation.extend(ACTOR_Z)).with_rotation(rotation),
         Sprite {
             image: actor_view.actor_type.sprite_handle.clone().unwrap(),
             custom_size: Some(Vec2::splat(config.checker.tile_size)),
+            flip_x,
             ..default()
         },
     ));

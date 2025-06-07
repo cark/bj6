@@ -17,3 +17,16 @@ alpha = 0.4
 [ui]
 turn_startup_duration = 1.0
 turn_startup_shake = 2.0
+activation_icon_size = 20.0
+activation_icon_offset = 25.0
+
+[particles]
+drop_magnitude = 40
+drop_count = 5
+drop_duration = 0.7
+
+[turn]
+activation_duration = 0.2
+deactivation_duration = 0.1
+hit_duration = 0.5
+move_duration = 0.3

@@ -11,7 +11,7 @@ use crate::{
     },
 };
 
-#[derive(Resource, Clone, Debug)]
+#[derive(Resource, Clone, Debug, Default)]
 pub struct Game {
     gold: u64,
     turns_left: u64,
@@ -105,8 +105,12 @@ impl Game {
         self.board.add_actor(actor).ok()
     }
 
+    pub fn update_actor(&mut self, actor_id: &ActorId, f: impl FnOnce(&mut Actor)) {
+        self.board.update_actor(actor_id, f);
+    }
+
     pub fn rotate_actor(&mut self, actor_id: &ActorId) {
-        self.board.update_actor(actor_id, |actor| actor.rotate());
+        self.update_actor(actor_id, |actor| actor.rotate());
     }
 
     pub fn actor_types(&self) -> &ActorTypes {
@@ -115,5 +119,9 @@ impl Game {
 
     pub fn shop(&self) -> &Shop {
         &self.shop
+    }
+
+    pub fn set_board(&mut self, board: Board) {
+        self.board = board;
     }
 }

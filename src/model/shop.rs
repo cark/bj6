@@ -5,7 +5,7 @@ use crate::model::{
 
 const RESTOCK_ITEM_COUNT: usize = 3;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Shop {
     restock_cost: f32,
     restock_multiplier: f32,
