@@ -2,7 +2,13 @@ use std::time::Duration;
 
 use bevy::color::palettes::tailwind::*;
 use bevy::prelude::*;
-use bevy_tweening::{Animator, RepeatCount, RepeatStrategy, Tween, lens::TransformScaleLens};
+use bevy_tween::{
+    interpolate::*,
+    prelude::*,
+    tween::{AnimationTarget, TargetComponent},
+};
+
+// use bevy_tweening::{Animator, RepeatCount, RepeatStrategy, Tween, lens::TransformScaleLens};
 
 use crate::{
     AppSystems,
@@ -111,28 +117,28 @@ fn show_selected_actor_tile(
             if let Ok((_e, mut tr)) = rects.single_mut() {
                 *tr = Transform::from_translation(translation);
             } else {
-                let tween = Tween::new(
-                    EaseFunction::QuadraticInOut,
-                    Duration::from_secs_f32(0.20),
-                    TransformScaleLens {
-                        start: Vec3::splat(0.90),
-                        end: Vec3::splat(1.05),
-                    },
-                )
-                .with_repeat_count(RepeatCount::Infinite)
-                .with_repeat_strategy(RepeatStrategy::MirroredRepeat);
-                commands.spawn((
-                    Name::new("SelectedActorRect"),
-                    Transform::from_translation(translation),
-                    SelectedActorRect,
-                    StateScoped(GameplayState::Placement),
-                    Sprite {
-                        image: assets.actor_rect.clone(),
-                        custom_size: Some(Vec2::splat(config.checker.tile_size)),
-                        ..default()
-                    },
-                    Animator::new(tween),
-                ));
+                let target = TargetComponent::marker();
+                commands
+                    .spawn((
+                        Name::new("SelectedActorRect"),
+                        Transform::from_translation(translation),
+                        SelectedActorRect,
+                        StateScoped(GameplayState::Placement),
+                        Sprite {
+                            image: assets.actor_rect.clone(),
+                            custom_size: Some(Vec2::splat(config.checker.tile_size)),
+                            ..default()
+                        },
+                        AnimationTarget,
+                    ))
+                    .animation()
+                    .repeat(Repeat::Infinitely)
+                    .repeat_style(RepeatStyle::PingPong)
+                    .insert_tween_here(
+                        Duration::from_secs_f32(0.2),
+                        EaseKind::CircularOut,
+                        target.with(scale(Vec3::splat(0.90), Vec3::splat(1.05))),
+                    );
             }
         }
     } else {

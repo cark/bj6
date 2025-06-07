@@ -23,7 +23,8 @@ serde = { version = "1", features = ["derive"] }
 ron = { version = "0.10" }
 im = "15.1"
 thiserror = "2.0"
-bevy_tweening = "0.13"
+# bevy_tweening = "0.13"
+bevy_tween = "0.8"
 nom = "8.0"
 
 

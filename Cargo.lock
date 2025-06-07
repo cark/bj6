@@ -1265,6 +1265,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_time_runner"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2585511ce9da102753cfb33eef39a1749a02dc5670e05d01004001e22cba326f"
+dependencies = [
+ "bevy_app",
+ "bevy_ecs",
+ "bevy_reflect",
+ "bevy_time",
+ "rustc_version",
+]
+
+[[package]]
 name = "bevy_transform"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1283,12 +1296,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_tweening"
-version = "0.13.0"
+name = "bevy_tween"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09645a8e66e45f2869fdcbe89a23cd83d030ac647248917bf8512fa86b03ae7a"
+checksum = "aae743c5677965fa86495604847a55fad480c84f12706b446f57a878bce9d4d2"
 dependencies = [
  "bevy",
+ "bevy_math",
+ "bevy_time_runner",
+ "rustc_version",
+ "tracing",
 ]
 
 [[package]]
@@ -1471,7 +1488,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_common_assets",
- "bevy_tweening",
+ "bevy_tween",
  "im",
  "log",
  "nom 8.0.0",
@@ -3891,6 +3908,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
+name = "rustc_version"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92"
+dependencies = [
+ "semver",
+]
+
+[[package]]
 name = "rustix"
 version = "0.38.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3993,6 +4019,12 @@ name = "self_cell"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0f7d95a54511e0c7be3f51e8867aa8cf35148d7b9445d44de2f943e2b206e749"
+
+[[package]]
+name = "semver"
+version = "1.0.26"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56e6fa9c48d24d85fb3de5ad847117517440f6beceb7798af16b4a87d616b8d0"
 
 [[package]]
 name = "send_wrapper"

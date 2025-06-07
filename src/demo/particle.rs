@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::{prelude::*, render::view::visibility, text::cosmic_text::Angle};
+use bevy::prelude::*;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(Update, execute_particles);
@@ -9,7 +9,7 @@ pub(super) fn plugin(app: &mut App) {
 #[derive(Component, Debug, Clone)]
 pub struct ParticleConfig {
     timer: Timer,
-    speed: Vec2,
+    // speed: Vec2,
     tweeners: Vec<ParticleTweener>,
 }
 
@@ -35,11 +35,11 @@ pub enum ParticleTweener {
         end: Color,
         ease: EaseFunction,
     },
-    Rotation {
-        start: f32,
-        end: f32,
-        ease: EaseFunction,
-    },
+    // Rotation {
+    //     start: f32,
+    //     end: f32,
+    //     ease: EaseFunction,
+    // },
 }
 
 impl ParticleConfig {
@@ -47,7 +47,7 @@ impl ParticleConfig {
         Self {
             timer: Timer::new(duration, TimerMode::Once),
             tweeners: Vec::new(),
-            speed: Vec2::X,
+            // speed: Vec2::X,
         }
     }
 
@@ -121,11 +121,10 @@ fn execute_particles(
                     let t = ease.sample_unchecked(config.timer.fraction());
                     sprite.color = start.mix(end, t);
                     //start.lerp(*end, t);
-                }
-                ParticleTweener::Rotation { start, end, ease } => {
-                    let t = ease.sample_unchecked(config.timer.fraction());
-                    tr.rotation = Quat::from_rotation_z(start.lerp(*end, t));
-                }
+                } // ParticleTweener::Rotation { start, end, ease } => {
+                  //     let t = ease.sample_unchecked(config.timer.fraction());
+                  //     tr.rotation = Quat::from_rotation_z(start.lerp(*end, t));
+                  // }
             }
         }
     }

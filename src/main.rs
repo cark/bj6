@@ -16,7 +16,8 @@ mod screens;
 mod theme;
 
 use bevy::{asset::AssetMetaCheck, prelude::*};
-use bevy_tweening::TweeningPlugin;
+use bevy_tween::DefaultTweenPlugins;
+// use bevy_tweening::TweeningPlugin;
 use camera::MainCamera;
 
 fn main() -> AppExit {
@@ -29,35 +30,33 @@ impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::srgb(1., 0.5, 0.5)));
         // Add Bevy plugins.
-        app.add_plugins((
-            DefaultPlugins
-                .set(AssetPlugin {
-                    // Wasm builds will check for meta files (that don't exist) if this isn't set.
-                    // This causes errors and even panics on web build on itch.
-                    // See https://github.com/bevyengine/bevy_github_ci_template/issues/48.
-                    meta_check: AssetMetaCheck::Never,
+        app.add_plugins((DefaultPlugins
+            .set(AssetPlugin {
+                // Wasm builds will check for meta files (that don't exist) if this isn't set.
+                // This causes errors and even panics on web build on itch.
+                // See https://github.com/bevyengine/bevy_github_ci_template/issues/48.
+                meta_check: AssetMetaCheck::Never,
+                ..default()
+            })
+            .set(WindowPlugin {
+                primary_window: Window {
+                    title: "Bj6".to_string(),
+                    fit_canvas_to_parent: true,
+                    position: if cfg!(feature = "dev") && cfg!(target_os = "windows") {
+                        WindowPosition::new(ivec2(1920, 0))
+                    } else {
+                        WindowPosition::Automatic
+                    },
                     ..default()
-                })
-                .set(WindowPlugin {
-                    primary_window: Window {
-                        title: "Bj6".to_string(),
-                        fit_canvas_to_parent: true,
-                        position: if cfg!(feature = "dev") && cfg!(target_os = "windows") {
-                            WindowPosition::new(ivec2(1920, 0))
-                        } else {
-                            WindowPosition::Automatic
-                        },
-                        ..default()
-                    }
-                    .into(),
-                    ..default()
-                })
-                .set(ImagePlugin::default_nearest()),
-            TweeningPlugin,
-        ));
+                }
+                .into(),
+                ..default()
+            })
+            .set(ImagePlugin::default_nearest()),));
 
         // Add other plugins.
         app.add_plugins((
+            DefaultTweenPlugins,
             asset_tracking::plugin,
             data::plugin,
             audio::plugin,

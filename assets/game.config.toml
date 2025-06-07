@@ -7,7 +7,7 @@ zoom_max_tiles = 48
 tile_size = 40
 
 [game]
-start_gold = 3
+start_gold = 20
 restock_multiplier = 1.5
 
 [drag]

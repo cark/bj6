@@ -6,7 +6,7 @@ use crate::model::{
     actor::ActorId, board::Board, direction::Dir, direction::RelDir, game::Game, program::Action,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum Cmd {
     Activate(ActorId),
     Deactivate(ActorId),
@@ -15,6 +15,7 @@ pub enum Cmd {
     Turn(ActorId, RelDir),
     CompletePush(Dest),
     CancelPush(Dest),
+    #[default]
     Done,
     Hit(Dest),
 }

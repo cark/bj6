@@ -6,7 +6,10 @@ use bevy::{
 };
 
 use crate::{
-    demo::{GameplayState, turn::TurnState},
+    demo::{
+        GameplayState,
+        // turn::TurnState
+    },
     screens::Screen,
 };
 
@@ -14,7 +17,7 @@ pub(super) fn plugin(app: &mut App) {
     // Log `Screen` state transitions.
     app.add_systems(Update, log_transitions::<Screen>);
     app.add_systems(Update, log_transitions::<GameplayState>);
-    app.add_systems(Update, log_transitions::<TurnState>);
+    // app.add_systems(Update, log_transitions::<TurnState>);
 
     // Toggle the debug overlay for UI.
     app.add_systems(
