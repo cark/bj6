@@ -55,7 +55,16 @@ impl Dir {
             Dir::Up => base_coord + ivec2(-rel_coord.y, rel_coord.x),
             Dir::Down => base_coord + ivec2(rel_coord.y, -rel_coord.x),
             Dir::Right => base_coord + rel_coord,
+
             Dir::Left => base_coord - rel_coord,
         }
     }
 }
+
+// pub fn to_quat(self) -> Quat {
+//     match self {
+//         Dir::Up => Quat::from_rotation_z(std::f32::consts::PI),
+//         Dir::Down =>  Quat::from_rotation_z(-std::f32::consts::PI / 2.0),
+//         Dir::Left => Quat::from_rotation_z(std::f32::consts::PI / 2.0),
+//         Dir::Right => ,
+//     }

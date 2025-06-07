@@ -3,7 +3,10 @@ use bevy::prelude::*;
 use crate::{
     AppSystems,
     data::game_config::GameConfig,
-    demo::{puff::SpawDropParticlesEvent, ui::actions::SetActiveActionEvent},
+    demo::{
+        actor::ActorRotationFixupEvent, puff::SpawDropParticlesEvent,
+        ui::actions::SetActiveActionEvent,
+    },
     model::{actor::ActorId, actor_type::ActorTypeId, game::Game},
 };
 
@@ -117,7 +120,7 @@ fn on_start_drag(
     mut commands: Commands,
     config: Res<GameConfig>,
     hovered_tile_coord: Res<HoveredTileCoord>,
-    mut q_sprite: Query<&mut Sprite, With<ActorId>>,
+    mut q_sprite: Query<(&mut Sprite, &ActorId)>,
 ) {
     // warn!("on_start_drag");
     let ev = trigger.event();
@@ -129,18 +132,17 @@ fn on_start_drag(
         });
         next_state.set(GameplayState::Drag);
 
+        let sprite = Sprite {
+            image: actor_type.sprite_handle.clone().unwrap(),
+            color: Color::linear_rgba(1.0, 1.0, 1.0, 0.5),
+            custom_size: Some(Vec2::splat(config.checker.tile_size * config.drag.scale)),
+            ..default()
+        };
+
         let entity = commands
-            .spawn((
-                StateScoped(GameplayState::Drag),
-                DragImage,
-                Sprite {
-                    image: actor_type.sprite_handle.clone().unwrap(),
-                    color: Color::linear_rgba(1.0, 1.0, 1.0, 0.5),
-                    custom_size: Some(Vec2::splat(config.checker.tile_size * config.drag.scale)),
-                    ..default()
-                },
-            ))
+            .spawn((StateScoped(GameplayState::Drag), DragImage, sprite))
             .id();
+
         if let Some(coord) = **hovered_tile_coord {
             let tile_size = config.checker.tile_size;
             commands.entity(entity).insert(Transform::from_translation(
@@ -148,8 +150,9 @@ fn on_start_drag(
             ));
         }
         if let DragSource::Board { dragged_entity, .. } = ev.source {
-            q_sprite.get_mut(dragged_entity).unwrap().color =
-                Color::linear_rgba(1.0, 1.0, 1.0, config.drag.alpha);
+            if let Ok((mut sprite, _actor_id)) = q_sprite.get_mut(dragged_entity) {
+                sprite.color = Color::linear_rgba(1.0, 1.0, 1.0, config.drag.alpha);
+            }
         }
     }
 }
@@ -268,6 +271,7 @@ fn on_drop(
                     );
                     q_actor_sprite.get_mut(dragged_entity).unwrap().color =
                         Color::linear_rgba(1.0, 1.0, 1.0, 1.0);
+                    commands.trigger(ActorRotationFixupEvent);
                     next_state.set(GameplayState::Placement);
                 }
             }
