@@ -42,6 +42,9 @@ pub(super) fn plugin(app: &mut App) {
     app.add_observer(on_fail_move_actor);
     app.add_observer(on_hit);
     app.add_observer(on_need_command);
+    app.add_observer(on_try_push);
+    app.add_observer(on_complete_push);
+    app.add_observer(on_cancel_push);
 
     app.add_observer(on_anim_event);
 }
@@ -90,6 +93,15 @@ struct HitEvent(ActorId, IVec2);
 #[derive(Event, Debug)]
 struct NeedCommandEvent;
 
+#[derive(Event, Debug)]
+struct TryPushEvent(ActorId, IVec2);
+
+#[derive(Event, Debug)]
+struct CancelPushEvent(ActorId, IVec2);
+
+#[derive(Event, Debug)]
+struct CompletePushEvent(ActorId, IVec2);
+
 fn enter(mut commands: Commands, game: Res<Game>) {
     warn!("start running!");
     let runner_game = game.clone();
@@ -132,10 +144,19 @@ fn on_need_command(
                 warn!("fail move");
                 commands.trigger(FailMoveActorEvent(dest.from_actor_id, dest.to_coord));
             }
-            Cmd::TryPush(dest) => todo!(),
+            Cmd::TryPush(dest) => {
+                warn!("try push");
+                commands.trigger(TryPushEvent(dest.from_actor_id, dest.to_coord));
+            }
+            Cmd::CompletePush(dest) => {
+                warn!("complete push");
+                commands.trigger(CompletePushEvent(dest.from_actor_id, dest.to_coord));
+            }
             Cmd::Turn(actor_id, rel_dir) => todo!(),
-            Cmd::CompletePush(dest) => todo!(),
-            Cmd::CancelPush(dest) => todo!(),
+            Cmd::CancelPush(dest) => {
+                warn!("cancel push");
+                commands.trigger(CancelPushEvent(dest.from_actor_id, dest.to_coord));
+            }
             Cmd::Done => {
                 warn!("Cmd::Done");
                 set_state.set(TurnState::EndTurn);
@@ -357,6 +378,112 @@ fn on_hit(
                             Duration::from_secs_f32(config.turn.hit_duration / 3.0),
                             EaseKind::QuarticOut,
                             target.with(translation(start.lerp(end, 0.6), start)),
+                        ),
+                        event(AnimEvent::AnimDone),
+                    )));
+                });
+        }
+    }
+}
+
+fn on_try_push(
+    trigger: Trigger<TryPushEvent>,
+    mut commands: Commands,
+    game: Res<Game>,
+    config: Res<GameConfig>,
+    actor_entities: Res<ActorEntities>,
+) {
+    let ev = trigger.event();
+    let actor_id = ev.0;
+    let target_coord = ev.1;
+    if let Some(actor_view) = game.actor_view(&actor_id) {
+        if let Some(actor_entity) = actor_entities.get(&actor_id) {
+            let start = tile_coord_to_world_coord(actor_view.actor.coord, config.checker.tile_size)
+                .extend(ACTOR_Z);
+            let end =
+                tile_coord_to_world_coord(target_coord, config.checker.tile_size).extend(ACTOR_Z);
+            let target = TargetComponent::marker();
+            commands
+                .entity(actor_entity)
+                .insert(AnimationTarget)
+                .with_children(|cmd| {
+                    cmd.spawn(()).animation().insert(sequence((
+                        tween(
+                            Duration::from_secs_f32(config.turn.try_push_duration),
+                            EaseKind::QuadraticOut,
+                            target.with(translation(start, start.lerp(end, 0.5))),
+                        ),
+                        event(AnimEvent::AnimDone),
+                    )));
+                });
+        }
+    }
+}
+
+fn on_complete_push(
+    trigger: Trigger<CompletePushEvent>,
+    mut commands: Commands,
+    mut game: ResMut<Game>,
+    config: Res<GameConfig>,
+    actor_entities: Res<ActorEntities>,
+) {
+    // todo!();
+    let ev = trigger.event();
+    let actor_id = ev.0;
+    let target_coord = ev.1;
+    if let Some(actor_view) = game.actor_view(&actor_id) {
+        if let Some(actor_entity) = actor_entities.get(&actor_id) {
+            let start = tile_coord_to_world_coord(actor_view.actor.coord, config.checker.tile_size)
+                .extend(ACTOR_Z);
+            let end =
+                tile_coord_to_world_coord(target_coord, config.checker.tile_size).extend(ACTOR_Z);
+            game.update_actor(&actor_id, |actor| actor.coord = target_coord);
+            let target = TargetComponent::marker();
+            commands
+                .entity(actor_entity)
+                .insert(AnimationTarget)
+                .with_children(|cmd| {
+                    cmd.spawn(()).animation().insert(sequence((
+                        tween(
+                            Duration::from_secs_f32(config.turn.complete_push_duration),
+                            EaseKind::QuadraticIn,
+                            target.with(translation(start.lerp(end, 0.5), end)),
+                        ),
+                        event(AnimEvent::AnimDone),
+                    )));
+                });
+        }
+    }
+}
+
+fn on_cancel_push(
+    trigger: Trigger<CancelPushEvent>,
+    mut commands: Commands,
+    mut game: ResMut<Game>,
+    config: Res<GameConfig>,
+    actor_entities: Res<ActorEntities>,
+) {
+    // todo!();
+    let ev = trigger.event();
+    let actor_id = ev.0;
+    let target_coord = ev.1;
+    if let Some(actor_view) = game.actor_view(&actor_id) {
+        if let Some(actor_entity) = actor_entities.get(&actor_id) {
+            let start = tile_coord_to_world_coord(actor_view.actor.coord, config.checker.tile_size)
+                .extend(ACTOR_Z);
+            let end =
+                tile_coord_to_world_coord(target_coord, config.checker.tile_size).extend(ACTOR_Z);
+            // game.update_actor(&actor_id, |actor| actor.coord = target_coord);
+            let target = TargetComponent::marker();
+            commands
+                .entity(actor_entity)
+                .insert(AnimationTarget)
+                .with_children(|cmd| {
+                    cmd.spawn(()).animation().insert(sequence((
+                        tween(
+                            Duration::from_secs_f32(config.turn.complete_push_duration),
+                            EaseKind::QuadraticIn,
+                            target.with(translation(start.lerp(end, 0.5), start)),
                         ),
                         event(AnimEvent::AnimDone),
                     )));

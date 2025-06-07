@@ -26,7 +26,10 @@ drop_count = 5
 drop_duration = 0.7
 
 [turn]
-activation_duration = 0.2
-deactivation_duration = 0.1
-hit_duration = 0.5
+try_push_duration = 0.2
+complete_push_duration = 0.1
+cancel_push_duration = 0.1
+activation_duration = 0.01
+deactivation_duration = 0.01
+hit_duration = 0.4
 move_duration = 0.3

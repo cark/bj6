@@ -60,4 +60,7 @@ pub struct TurnConfig {
     pub deactivation_duration: f32,
     pub hit_duration: f32,
     pub move_duration: f32,
+    pub try_push_duration: f32,
+    pub complete_push_duration: f32,
+    pub cancel_push_duration: f32,
 }
