@@ -459,7 +459,7 @@ fn on_complete_push(
 fn on_cancel_push(
     trigger: Trigger<CancelPushEvent>,
     mut commands: Commands,
-    mut game: ResMut<Game>,
+    game: Res<Game>,
     config: Res<GameConfig>,
     actor_entities: Res<ActorEntities>,
 ) {

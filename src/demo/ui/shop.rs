@@ -86,6 +86,7 @@ fn on_populate_shop_items(
     trigger: Trigger<PopulateShopItemsEvent>,
     mut commands: Commands,
     game: Res<Game>,
+    mut q_hideable: Query<&mut Node, With<InfoHideable>>,
 ) {
     let panel_entity = trigger.target();
     commands.entity(panel_entity).despawn_related::<Children>();
@@ -95,6 +96,9 @@ fn on_populate_shop_items(
             commands.spawn(shop_item(actor_type, actor_type_id.clone()));
         }
     });
+    for mut node in q_hideable.iter_mut() {
+        node.display = Display::None;
+    }
 }
 
 const ITEM_ICON_SIZE: f32 = 45.;
@@ -107,16 +111,17 @@ fn shop_item(actor_type: &ActorType, actor_type_id: ActorTypeId) -> impl Bundle 
         ShopItem,
         actor_type_id,
         actor_type.clone(),
-        content_button(shop_item_button_content(actor_type), shop_item_clicked),
+        content_button(shop_item_button_content(actor_type), on_shop_item_clicked),
     )
 }
 
-fn shop_item_clicked(
+fn on_shop_item_clicked(
     trigger: Trigger<ButtonClick>,
     mut commands: Commands,
     child_of: Query<&ChildOf>,
     shop_items: Query<(Entity, &ActorTypeId), With<ShopItem>>,
     mut selected_actor_type: ResMut<SelectedActorType>,
+    mut q_hideable: Query<&mut Node, With<InfoHideable>>,
     game: Res<Game>,
 ) {
     let target = trigger.target();
@@ -133,6 +138,27 @@ fn shop_item_clicked(
                     .position(|a| a == actor_type_id)
                     .unwrap(),
             });
+            if let Some(actor_type) = game.actor_types().get(actor_type_id) {
+                commands.trigger(UpdateNamedValueEvent {
+                    name: "actor_type_name".to_string(),
+                    value: actor_type.name.clone(),
+                });
+                commands.trigger(UpdateNamedValueEvent {
+                    name: "max_activations".to_string(),
+                    value: actor_type.max_activations.to_string(),
+                });
+                commands.trigger(UpdateNamedValueEvent {
+                    name: "prize".to_string(),
+                    value: actor_type.prize.to_string(),
+                });
+                commands.trigger(UpdateNamedValueEvent {
+                    name: "actor_description".to_string(),
+                    value: actor_type.description.clone(),
+                });
+                for mut node in q_hideable.iter_mut() {
+                    node.display = Display::Flex;
+                }
+            }
         } else {
             commands.trigger_targets(SetButtonSelectedEvent(false), item);
         }
@@ -204,14 +230,14 @@ fn shop_window() -> impl Bundle {
         Name::new("Shop Window"),
         Node {
             // width: Auto,
-            // height: Auto,
+            height: Percent(100.),
             margin: UiRect::new(Px(20.0), Px(20.0), Px(0.0), Px(20.0)),
             padding: UiRect::all(Px(20.0)),
             align_items: AlignItems::Center,
             justify_content: JustifyContent::Start,
             flex_direction: FlexDirection::Column,
             row_gap: Px(20.0),
-            flex_grow: 1.0,
+            // flex_grow: 1.0,
             ..default()
         },
         BackgroundColor(Color::linear_rgba(0.0, 0.0, 0.0, 0.8)),
@@ -249,9 +275,10 @@ fn content() -> impl Bundle {
             flex_direction: FlexDirection::Row,
             justify_content: JustifyContent::Start,
             align_items: AlignItems::FlexStart,
+            column_gap: Px(20.),
             ..default()
         },
-        children![items_panel()],
+        children![items_panel(), info_panel()],
     )
 }
 
@@ -285,6 +312,121 @@ fn items_panel() -> impl Bundle {
             (
                 RestockButton,
                 widget::content_button(restock_button_content(), on_restock_button_clicked),
+            )
+        ],
+    )
+}
+
+#[derive(Debug, Component)]
+struct InfoHideable;
+
+fn info_panel() -> impl Bundle {
+    (
+        Node {
+            height: Percent(100.),
+            width: Px(400.),
+            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::FlexStart,
+            align_items: AlignItems::Stretch,
+            ..default()
+        },
+        children![
+            (
+                InfoHideable,
+                Node {
+                    display: Display::None,
+                    margin: UiRect::new(Px(0.), Px(0.), Px(0.), Px(5.)),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    flex_direction: FlexDirection::Column,
+                    ..default()
+                },
+                BackgroundColor(Color::linear_rgba(0.0, 0.0, 0.0, 0.8)),
+                children![(
+                    Node {
+                        min_height: Px(30.),
+                        ..default()
+                    },
+                    SmartText::new("{named:actor_type_name}", 24.),
+                )]
+            ),
+            info_numbers(),
+            info_text(),
+        ],
+    )
+}
+
+fn info_text() -> impl Bundle {
+    (
+        InfoHideable,
+        Node {
+            display: Display::None,
+            margin: UiRect::new(Px(0.), Px(0.), Px(0.), Px(5.)),
+            padding: UiRect::all(Px(10.)),
+            flex_grow: 1.0,
+            ..default()
+        },
+        BackgroundColor(Color::linear_rgba(0.0, 0.0, 0.0, 0.8)),
+        children![(
+            Node {
+                flex_direction: FlexDirection::Row,
+                flex_wrap: FlexWrap::Wrap,
+                justify_content: JustifyContent::Start,
+                //align_items: AlignItems::Center,
+                ..default()
+            },
+            // Text(
+            //     "bonjour je regarde comment faire avec des tres long texts. J'espere que ca va wrap !".to_string()
+            // ),
+            SmartText::new("{named:actor_description}", 18.),
+        )],
+    )
+}
+
+fn info_numbers() -> impl Bundle {
+    (
+        InfoHideable,
+        Node {
+            display: Display::None,
+            width: Percent(100.),
+            min_height: Px(30.),
+            margin: UiRect::vertical(Px(5.)),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Stretch,
+            flex_direction: FlexDirection::Row,
+            column_gap: Px(10.),
+            ..default()
+        },
+        children![
+            (
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    flex_grow: 1.0,
+                    padding: UiRect::all(Px(5.)),
+                    ..default()
+                },
+                BackgroundColor(Color::linear_rgba(0.0, 0.0, 0.0, 0.8)),
+                children![(
+                    Node::DEFAULT,
+                    SmartText::new("{named:max_activations} {icon:activation}/{icon:turn}", 14.),
+                )]
+            ),
+            (
+                Node {
+                    flex_grow: 1.0,
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    padding: UiRect::all(Px(5.)),
+                    ..default()
+                },
+                BackgroundColor(Color::linear_rgba(0.0, 0.0, 0.0, 0.8)),
+                children![(
+                    Node::DEFAULT,
+                    SmartText::new("{named:prize} {icon:coin}/{icon:activation}", 14.),
+                )]
             )
         ],
     )
@@ -335,8 +477,10 @@ fn on_restock_button_clicked(
     mut commands: Commands,
     mut game: ResMut<Game>,
     shop_items_panel: Single<Entity, With<ShopItemsPanel>>,
+    mut selected_actor_type: ResMut<SelectedActorType>,
 ) {
     game.restock();
+    selected_actor_type.0 = None;
     commands.trigger(UpdateRestockButtonEvent);
     commands.trigger(UpdateBuyButtonEvent);
     commands.trigger_targets(PopulateShopItemsEvent, shop_items_panel.into_inner());

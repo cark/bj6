@@ -8,6 +8,7 @@ prize = 1
 cost = 0
 sprite_name = "start.png"
 program = [{ type = "Hit", arg = [[1, 0]] }]
+description = "The alpha, the omega"
 
 [hammer_time]
 name = "Hammer time"
@@ -16,14 +17,16 @@ prize = 1
 cost = 1
 sprite_name = "hammer_time.png"
 program = [{ type = "Hit", arg = [[1, 0]] }]
+description = "Pokes toward its front."
 
 [pusher]
-name = "Pusher"
+name = "Andrew Pusher"
 max_activations = 3
 prize = 1
 cost = 1
 sprite_name = "pusher.png"
 program = [{ type = "Push", arg = "Front" }]
+description = "For anything pushing, there's the man.\n\nPushes once to the front."
 
 [bowling_ball]
 name = "Bowling ball"
@@ -42,3 +45,4 @@ program = [
         ],
     ] },
 ]
+description = "Rolls, rolls, rolls, then pokes toward the front."

@@ -29,6 +29,7 @@ pub struct ActorType {
     pub cost: u32,
     #[serde(skip_deserializing)]
     pub sprite_handle: Option<Handle<Image>>,
+    pub description: String,
 }
 
 fn default_as_true() -> bool {

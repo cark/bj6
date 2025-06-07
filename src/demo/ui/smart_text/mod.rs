@@ -42,7 +42,16 @@ pub struct Icons(HashMap<String, Handle<Image>>);
 fn load_all_assets(mut cmd: Commands, asset_server: Res<AssetServer>) {
     let handle = asset_server.load_folder("");
     let items = [
-        "coin", "lmb", "mmb", "poke", "rmb", "rotate", "round", "turn",
+        "coin",
+        "lmb",
+        "mmb",
+        "poke",
+        "rmb",
+        "rotate",
+        "round",
+        "turn",
+        "activation",
+        "turn",
     ];
     let hm = items
         .iter()
@@ -161,6 +170,15 @@ fn spawn_parse_node<R>(
 pub struct SmartText {
     pub text: String,
     pub font_size: f32,
+}
+
+impl SmartText {
+    pub fn new(text: &str, font_size: f32) -> Self {
+        SmartText {
+            text: text.to_string(),
+            font_size,
+        }
+    }
 }
 
 impl Default for SmartText {

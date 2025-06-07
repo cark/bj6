@@ -40,7 +40,9 @@ fn content() -> impl Bundle {
         Node {
             height: Val::Percent(100.0),
             width: Val::Percent(100.0),
-
+            align_content: AlignContent::Center,
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
             ..default()
         },
         Pickable::IGNORE,
