@@ -18,9 +18,10 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 #[derive(Event, Debug, Clone, Copy, PartialEq, Eq, Hash)]
-struct UpdateTopBarEvent;
+pub struct UpdateTopBarEvent;
 
 fn on_update_top_bar(_: Trigger<UpdateTopBarEvent>, mut commands: Commands, game: Res<Game>) {
+    // warn!("*************** update topbar");
     commands.trigger(UpdateNamedValueEvent {
         name: "current_gold".to_string(),
         value: game.gold().to_string(),

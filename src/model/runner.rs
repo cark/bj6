@@ -18,6 +18,7 @@ pub enum Cmd {
     #[default]
     Done,
     Hit(Dest),
+    Prize(ActorId, u64),
 }
 
 #[derive(Debug, Clone)]
@@ -58,6 +59,8 @@ impl Runner {
     fn activate(&mut self, actor_id: ActorId) {
         let view = self.game.actor_view(&actor_id).unwrap();
         if !view.actor.activated && view.actor.activations_left > 0 {
+            self.game.earn_prize_gold(view.actor_type.prize as u64);
+            self.push_cmd(Cmd::Prize(actor_id, view.actor_type.prize as u64));
             self.game.update_actor(&actor_id, |actor| {
                 actor.activated = true;
                 actor.activations_left -= 1;
@@ -74,6 +77,7 @@ impl Runner {
     }
 
     pub fn run(&mut self) -> (Game, Vec<Cmd>) {
+        self.game.new_turn();
         self.activate(self.game.board().start_actor_id());
 
         while let Some(actor_id) = self.pop_activated() {

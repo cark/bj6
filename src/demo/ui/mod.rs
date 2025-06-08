@@ -2,7 +2,7 @@ pub mod actions;
 pub mod shop;
 pub mod smart_text;
 pub mod startup_bar;
-mod top_bar;
+pub mod top_bar;
 
 use bevy::prelude::*;
 use top_bar::top_bar_ui;

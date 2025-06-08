@@ -19,6 +19,7 @@ use crate::{
         level::{LevelAssets, ResetBoardEvent},
         puff::SpawnHitParticlesEvent,
         tile::tile_coord_to_world_coord,
+        ui::top_bar::UpdateTopBarEvent,
     },
     model::{
         actor::ActorId,
@@ -45,6 +46,7 @@ pub(super) fn plugin(app: &mut App) {
     app.add_observer(on_try_push);
     app.add_observer(on_complete_push);
     app.add_observer(on_cancel_push);
+    app.add_observer(on_prize);
 
     app.add_observer(on_anim_event);
 }
@@ -101,6 +103,9 @@ struct CancelPushEvent(ActorId, IVec2);
 
 #[derive(Event, Debug)]
 struct CompletePushEvent(ActorId, IVec2);
+
+#[derive(Event, Debug)]
+struct PrizeEvent(ActorId, u64);
 
 fn enter(mut commands: Commands, game: Res<Game>) {
     warn!("start running!");
@@ -165,7 +170,12 @@ fn on_need_command(
                 to_coord,
                 from_actor_id,
             }) => {
+                warn!("Cmd::Hit");
                 commands.trigger(HitEvent(from_actor_id, to_coord));
+            }
+            Cmd::Prize(actor_id, gold) => {
+                warn!("Cmd::Prize {gold}");
+                commands.trigger(PrizeEvent(actor_id, gold));
             }
         }
     } else {
@@ -226,10 +236,7 @@ fn on_spawn_activation(
                     ));
             });
     }
-    commands.animation().insert(sequence((
-        forward(Duration::from_secs_f32(config.turn.activation_duration)), //
-        event(AnimEvent::AnimDone),
-    )));
+    done_in(commands.reborrow(), config.turn.activation_duration);
 }
 
 fn on_despawn_activation(
@@ -251,10 +258,7 @@ fn on_despawn_activation(
             }
         }
     }
-    commands.animation().insert(sequence((
-        forward(Duration::from_secs_f32(config.turn.deactivation_duration)),
-        event(AnimEvent::AnimDone),
-    )));
+    done_in(commands.reborrow(), config.turn.deactivation_duration);
 }
 
 fn enter_end_turn(
@@ -514,4 +518,18 @@ fn on_time_runner_ended(mut reader: EventReader<TimeRunnerEnded>, mut commands: 
             commands.entity(ended).despawn();
         }
     }
+}
+
+fn on_prize(trigger: Trigger<PrizeEvent>, mut commands: Commands, mut game: ResMut<Game>) {
+    let ev = trigger.event();
+    game.earn_prize_gold(ev.1);
+    commands.trigger(UpdateTopBarEvent);
+    done_in(commands.reborrow(), 0.01);
+}
+
+fn done_in(mut commands: Commands, secs: f32) {
+    commands.animation().insert(sequence((
+        forward(Duration::from_secs_f32(secs)),
+        event(AnimEvent::AnimDone),
+    )));
 }

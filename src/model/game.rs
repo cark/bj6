@@ -14,6 +14,7 @@ use crate::{
 #[derive(Resource, Clone, Debug, Default)]
 pub struct Game {
     gold: u64,
+    gold_this_turn: u64,
     turns_left: u64,
     round: u32,
     required_gold: u64,
@@ -27,6 +28,7 @@ impl Game {
         let board = Board::new(&actor_types);
         let mut result = Self {
             gold: 1,
+            gold_this_turn: 0,
             turns_left: 5,
             round: 1,
             required_gold: 10,
@@ -123,5 +125,15 @@ impl Game {
 
     pub fn set_board(&mut self, board: Board) {
         self.board = board;
+    }
+
+    pub fn new_turn(&mut self) {
+        self.gold_this_turn = 0;
+        self.turns_left -= 1;
+    }
+
+    pub fn earn_prize_gold(&mut self, amount: u64) {
+        self.gold += amount;
+        self.gold_this_turn += amount;
     }
 }
