@@ -10,6 +10,7 @@ impl ActorTypes {
         self.0.get(actor_type_id)
     }
 
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self(HashMap::new())
     }

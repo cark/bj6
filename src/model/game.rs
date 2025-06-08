@@ -15,9 +15,11 @@ use crate::{
 pub struct Game {
     gold: u64,
     gold_this_turn: u64,
+    total_gold: u64,
     turns_left: u64,
     round: u32,
     required_gold: u64,
+    gold_required_multiplier: f32,
     board: Board,
     actor_types: ActorTypes,
     shop: Shop,
@@ -31,9 +33,11 @@ impl Game {
             gold_this_turn: 0,
             turns_left: 5,
             round: 1,
-            required_gold: 10,
+            required_gold: game_config.start_required_gold,
+            gold_required_multiplier: game_config.gold_required_multiplier,
             board,
             actor_types,
+            total_gold: 0,
             shop: Shop::new(game_config.restock_multiplier),
         };
         result.gold = game_config.start_gold;
@@ -135,5 +139,24 @@ impl Game {
     pub fn earn_prize_gold(&mut self, amount: u64) {
         self.gold += amount;
         self.gold_this_turn += amount;
+        self.total_gold += amount;
+    }
+
+    pub fn total_gold(&self) -> u64 {
+        self.total_gold
+    }
+
+    pub fn is_round_end(&self) -> bool {
+        self.turns_left == 0
+    }
+
+    pub fn can_go_next_round(&self) -> bool {
+        self.turns_left == 0 && self.gold >= self.required_gold
+    }
+
+    pub fn next_round(&mut self) {
+        self.round += 1;
+        self.turns_left = 5;
+        self.required_gold = (self.required_gold as f32 * self.gold_required_multiplier) as u64;
     }
 }

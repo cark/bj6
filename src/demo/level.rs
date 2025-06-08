@@ -7,7 +7,11 @@ use crate::{
     asset_tracking::LoadResource,
     camera::MainCamera,
     data::game_config::GameConfig,
-    demo::{GameplayState, ui::actions::SetActiveActionEvent},
+    demo::{
+        GameplayState,
+        // music::{Song, ToSongEvent},
+        ui::actions::SetActiveActionEvent,
+    },
     model::{actor::ActorId, actor_types::ActorTypes, game::Game},
     screens::Screen,
 };
@@ -33,6 +37,7 @@ pub(super) fn plugin(app: &mut App) {
         Update,
         update_actions.run_if(in_state(GameplayState::Placement)),
     );
+    //app.Add_system(OnEnter, )
 
     app.add_observer(on_reset_board);
 }
@@ -76,7 +81,20 @@ pub struct LevelAssets {
     pub puff: Handle<Image>,
     #[dependency]
     pub activation: Handle<Image>,
-    // music: Handle<AudioSource>,
+    #[dependency]
+    pub song1: Handle<AudioSource>,
+    #[dependency]
+    pub move_sfx: Handle<AudioSource>,
+    #[dependency]
+    pub move_fail_sfx: Handle<AudioSource>,
+    #[dependency]
+    pub hit_sfx: Handle<AudioSource>,
+    #[dependency]
+    pub try_push_sfx: Handle<AudioSource>,
+    #[dependency]
+    pub cancel_push_sfx: Handle<AudioSource>,
+    // #[dependency]
+    // pub song2: Handle<AudioSource>,
 }
 
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
@@ -100,7 +118,13 @@ impl FromWorld for LevelAssets {
             rotate: assets.load("images/rotate.png"),
             puff: assets.load("images/puff.png"),
             activation: assets.load("images/activation.png"),
-            //music: assets.load("audio/music/Fluffing A Duck.ogg"),
+            // song1: assets.load("audio/music/bj6-music-1-loop.ogg"),
+            song1: assets.load("audio/music/bj6-music-2-loop.ogg"),
+            move_sfx: assets.load("audio/sound_effects/move.ogg"),
+            move_fail_sfx: assets.load("audio/sound_effects/move_fail.ogg"),
+            hit_sfx: assets.load("audio/sound_effects/hit.ogg"),
+            try_push_sfx: assets.load("audio/sound_effects/try_push.ogg"),
+            cancel_push_sfx: assets.load("audio/sound_effects/cancel_push.ogg"),
         }
     }
 }
@@ -111,6 +135,7 @@ pub fn enter(mut commands: Commands, actor_types: Res<ActorTypes>, game_config: 
     let start_actor_id = game.board().start_actor_id();
     commands.insert_resource(game);
     commands.spawn(start_actor_id);
+    // commands.trigger(ToSongEvent(Song::Song1));
 }
 
 pub fn exit(mut commands: Commands) {

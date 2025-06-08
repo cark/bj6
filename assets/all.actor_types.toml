@@ -46,3 +46,12 @@ program = [
     ] },
 ]
 description = "Rolls, rolls, rolls, then pokes toward the front."
+
+# [ballerina]
+# name = "Ballerina"
+# max_activations = 3
+# prize = 2
+# cost = 3
+# sprite_name = "ballerina.png"
+# program = [{ type = "Push", arg = "Right" }, { type = "Turn", arg = "Right" }]
+# description = "Dances to the front, pushing to the right, then faces her partner."

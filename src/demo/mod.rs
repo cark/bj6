@@ -4,6 +4,7 @@ pub mod drag;
 pub mod follow;
 pub mod level;
 mod mouse;
+pub mod music;
 pub mod particle;
 pub mod puff;
 pub mod sprite_animate;
@@ -31,6 +32,7 @@ pub(super) fn plugin(app: &mut App) {
         particle::plugin,
         turn::plugin,
         follow::plugin,
+        music::plugin,
     ));
     // app.add_systems(OnEnter(Paused(true)), enter_paused);
     // app.add_systems(OnExit(Paused(true)), exit_paused);
@@ -54,6 +56,7 @@ pub enum GameplayState {
     TurnStartup,
     Turn,
     Drag,
+    GameOver,
     // Run,
 }
 

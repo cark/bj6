@@ -8,7 +8,9 @@ zoom_max_tiles = 48
 tile_size = 40
 
 [game]
-start_gold = 20
+start_gold = 100
+start_required_gold = 20
+gold_required_multiplier = 2.0
 restock_multiplier = 1.5
 
 [drag]
@@ -34,3 +36,4 @@ activation_duration = 0.01
 deactivation_duration = 0.01
 hit_duration = 0.4
 move_duration = 0.3
+turn_duration = 0.2

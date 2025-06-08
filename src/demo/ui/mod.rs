@@ -1,4 +1,6 @@
 pub mod actions;
+pub mod end_turn;
+pub mod game_over;
 pub mod shop;
 pub mod smart_text;
 pub mod startup_bar;
@@ -17,6 +19,8 @@ pub(super) fn plugin(app: &mut App) {
         smart_text::plugin,
         actions::plugin,
         startup_bar::plugin,
+        end_turn::plugin,
+        game_over::plugin,
     ));
     // app.add_observer(on_shop_button_clicked);
 }

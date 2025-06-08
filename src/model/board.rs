@@ -53,6 +53,7 @@ impl Board {
         self.coord_to_actor_id.get(coord).copied()
     }
 
+    #[allow(dead_code)]
     pub fn coord_to_actor(&self, coord: IVec2) -> Option<&Actor> {
         self.coord_to_actor_id(&coord)
             .and_then(|actor_id| self.actor_id_to_actor(&actor_id))

@@ -11,19 +11,21 @@ use bevy_tween::{
 };
 
 use crate::{
+    audio::sound_effect,
     data::game_config::GameConfig,
     demo::{
         GameplayState, Paused,
-        actor::{ACTOR_Z, ActorEntities},
+        actor::{ACTOR_Z, ActorEntities, ActorRotationFixupEvent},
         camera::CameraToActorEvent,
         follow::{Follows, follow_offset},
         level::{LevelAssets, ResetBoardEvent},
         puff::SpawnHitParticlesEvent,
         tile::tile_coord_to_world_coord,
-        ui::top_bar::UpdateTopBarEvent,
+        ui::{game_over::GameOverEvent, top_bar::UpdateTopBarEvent},
     },
     model::{
         actor::ActorId,
+        direction::RelDir,
         game::Game,
         runner::{Cmd, Dest, Runner},
     },
@@ -52,6 +54,7 @@ pub(super) fn plugin(app: &mut App) {
     app.add_observer(on_complete_push);
     app.add_observer(on_cancel_push);
     app.add_observer(on_prize);
+    app.add_observer(on_turn);
 
     app.add_observer(on_anim_event);
 }
@@ -60,6 +63,7 @@ pub(super) fn plugin(app: &mut App) {
 enum AnimEvent {
     Hit(IVec2),
     AnimDone,
+    PlaySfx(Handle<AudioSource>),
     #[default]
     None,
 }
@@ -110,6 +114,9 @@ struct CancelPushEvent(ActorId, IVec2);
 struct CompletePushEvent(ActorId, IVec2);
 
 #[derive(Event, Debug)]
+struct TurnEvent(ActorId, RelDir);
+
+#[derive(Event, Debug)]
 #[allow(dead_code)]
 struct PrizeEvent(ActorId, u64);
 
@@ -140,6 +147,28 @@ fn enter_pause(mut q_time_runner: Query<&mut TimeRunner>) {
 fn exit_pause(mut q_time_runner: Query<&mut TimeRunner>) {
     for mut time_runner in &mut q_time_runner {
         time_runner.set_paused(false);
+    }
+}
+
+fn enter_end_turn(
+    mut next_turn_state: ResMut<NextState<TurnState>>,
+    mut next_gameplay_state: ResMut<NextState<GameplayState>>,
+    cmds: Res<Cmds>,
+    mut game: ResMut<Game>,
+    mut commands: Commands,
+) {
+    *game = cmds.1.clone();
+
+    let game_over = game.is_round_end() && !game.can_go_next_round();
+    if game_over {
+        commands.trigger(GameOverEvent);
+    } else {
+        next_turn_state.set(TurnState::WorkaroundBugs);
+        next_gameplay_state.set(GameplayState::Placement);
+        commands.trigger(ResetBoardEvent);
+        if game.is_round_end() {
+            game.next_round();
+        }
     }
 }
 
@@ -175,7 +204,10 @@ fn on_need_command(
                 warn!("complete push");
                 commands.trigger(CompletePushEvent(dest.from_actor_id, dest.to_coord));
             }
-            Cmd::Turn(actor_id, rel_dir) => todo!(),
+            Cmd::Turn(actor_id, rel_dir) => {
+                warn!("turn");
+                commands.trigger(TurnEvent(actor_id, rel_dir));
+            }
             Cmd::CancelPush(dest) => {
                 warn!("cancel push");
                 commands.trigger(CancelPushEvent(dest.from_actor_id, dest.to_coord));
@@ -279,17 +311,19 @@ fn on_despawn_activation(
     done_in(commands.reborrow(), config.turn.deactivation_duration);
 }
 
-fn enter_end_turn(
-    mut next_turn_state: ResMut<NextState<TurnState>>,
-    mut next_gameplay_state: ResMut<NextState<GameplayState>>,
-    cmds: Res<Cmds>,
-    mut game: ResMut<Game>,
+fn on_turn(
+    trigger: Trigger<TurnEvent>,
     mut commands: Commands,
+    mut game: ResMut<Game>,
+    config: Res<GameConfig>,
 ) {
-    next_turn_state.set(TurnState::WorkaroundBugs);
-    next_gameplay_state.set(GameplayState::Placement);
-    *game = cmds.1.clone();
-    commands.trigger(ResetBoardEvent);
+    let actor_id = trigger.event().0;
+    let rel_dir = trigger.event().1;
+    game.update_actor(&actor_id, |actor| {
+        actor.looks_to = actor.looks_to.apply_relative(rel_dir)
+    });
+    commands.trigger(ActorRotationFixupEvent);
+    done_in(commands.reborrow(), config.turn.turn_duration);
 }
 
 fn on_move_actor(
@@ -298,6 +332,7 @@ fn on_move_actor(
     actor_entities: Res<ActorEntities>,
     config: Res<GameConfig>,
     mut game: ResMut<Game>,
+    assets: Res<LevelAssets>,
 ) {
     let ev = trigger.event();
     let actor_id = ev.0;
@@ -324,6 +359,11 @@ fn on_move_actor(
                         event(AnimEvent::AnimDone),
                     )));
                 });
+            anim_event_in(
+                commands.reborrow(),
+                config.turn.move_duration / 2.,
+                AnimEvent::PlaySfx(assets.move_sfx.clone()),
+            );
         }
     }
 }
@@ -334,6 +374,7 @@ fn on_fail_move_actor(
     actor_entities: Res<ActorEntities>,
     config: Res<GameConfig>,
     game: Res<Game>,
+    assets: Res<LevelAssets>,
 ) {
     let ev = trigger.event();
     let actor_id = ev.0;
@@ -361,6 +402,11 @@ fn on_fail_move_actor(
                         event(AnimEvent::AnimDone),
                     )));
                 });
+            anim_event_in(
+                commands.reborrow(),
+                config.turn.move_duration / 2.,
+                AnimEvent::PlaySfx(assets.move_fail_sfx.clone()),
+            );
         }
     }
 }
@@ -371,6 +417,7 @@ fn on_hit(
     actor_entities: Res<ActorEntities>,
     config: Res<GameConfig>,
     game: Res<Game>,
+    assets: Res<LevelAssets>,
 ) {
     let ev = trigger.event();
     let actor_id = ev.0;
@@ -407,6 +454,11 @@ fn on_hit(
                         event(AnimEvent::AnimDone),
                     )));
                 });
+            anim_event_in(
+                commands.reborrow(),
+                config.turn.hit_duration / 3.,
+                AnimEvent::PlaySfx(assets.hit_sfx.clone()),
+            );
         }
     }
 }
@@ -417,6 +469,7 @@ fn on_try_push(
     game: Res<Game>,
     config: Res<GameConfig>,
     actor_entities: Res<ActorEntities>,
+    assets: Res<LevelAssets>,
 ) {
     let ev = trigger.event();
     let actor_id = ev.0;
@@ -442,6 +495,11 @@ fn on_try_push(
                         event(AnimEvent::AnimDone),
                     )));
                 });
+            anim_event_in(
+                commands.reborrow(),
+                0.0,
+                AnimEvent::PlaySfx(assets.try_push_sfx.clone()),
+            );
         }
     }
 }
@@ -452,6 +510,7 @@ fn on_complete_push(
     mut game: ResMut<Game>,
     config: Res<GameConfig>,
     actor_entities: Res<ActorEntities>,
+    assets: Res<LevelAssets>,
 ) {
     // todo!();
     let ev = trigger.event();
@@ -479,6 +538,11 @@ fn on_complete_push(
                         event(AnimEvent::AnimDone),
                     )));
                 });
+            anim_event_in(
+                commands.reborrow(),
+                config.turn.complete_push_duration * 0.25,
+                AnimEvent::PlaySfx(assets.move_sfx.clone()),
+            );
         }
     }
 }
@@ -489,6 +553,7 @@ fn on_cancel_push(
     game: Res<Game>,
     config: Res<GameConfig>,
     actor_entities: Res<ActorEntities>,
+    assets: Res<LevelAssets>,
 ) {
     // todo!();
     let ev = trigger.event();
@@ -509,13 +574,18 @@ fn on_cancel_push(
                 .with_children(|cmd| {
                     cmd.spawn(()).animation().insert(sequence((
                         tween(
-                            Duration::from_secs_f32(config.turn.complete_push_duration),
+                            Duration::from_secs_f32(config.turn.cancel_push_duration),
                             EaseKind::QuadraticIn,
                             target.with(translation(start.lerp(end, 0.5), start)),
                         ),
                         event(AnimEvent::AnimDone),
                     )));
                 });
+            anim_event_in(
+                commands.reborrow(),
+                0.0,
+                AnimEvent::PlaySfx(assets.cancel_push_sfx.clone()),
+            );
         }
     }
 }
@@ -525,12 +595,14 @@ fn on_anim_event(
     mut commands: Commands,
     // mut next_state: ResMut<NextState<TurnState>>,
 ) {
-    warn!("on_anim_event");
     match trigger.event().data {
         AnimEvent::Hit(coord) => {
             commands.trigger(SpawnHitParticlesEvent(coord));
         }
         AnimEvent::AnimDone => commands.trigger(NeedCommandEvent),
+        AnimEvent::PlaySfx(ref handle) => {
+            commands.spawn(sound_effect(handle.clone()));
+        }
         AnimEvent::None => unreachable!(),
     }
 }
@@ -555,5 +627,12 @@ fn done_in(mut commands: Commands, secs: f32) {
     commands.animation().insert(sequence((
         forward(Duration::from_secs_f32(secs)),
         event(AnimEvent::AnimDone),
+    )));
+}
+
+fn anim_event_in(mut commands: Commands, secs: f32, anim_event: AnimEvent) {
+    commands.animation().insert(sequence((
+        forward(Duration::from_secs_f32(secs)),
+        event(anim_event),
     )));
 }

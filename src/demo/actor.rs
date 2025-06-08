@@ -5,7 +5,7 @@ use bevy::{platform::collections::HashMap, prelude::*};
 use crate::{
     AppSystems,
     data::game_config::GameConfig,
-    demo::ui::actions::SetActiveActionEvent,
+    demo::{Paused, ui::actions::SetActiveActionEvent},
     model::{actor::ActorId, actor_type::ActorTypeId, direction::Dir, game::Game},
     screens::Screen,
 };
@@ -25,7 +25,10 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(
         Update,
         (actor_click, update_actions, rotate)
-            .run_if(in_state(GameplayState::Placement).and(in_state(Screen::Gameplay)))
+            .run_if(
+                in_state(GameplayState::Placement)
+                    .and(in_state(Screen::Gameplay).and(in_state(Paused(false)))),
+            )
             .in_set(AppSystems::Update),
     );
 }

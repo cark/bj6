@@ -101,7 +101,7 @@ fn on_populate_shop_items(
     }
 }
 
-const ITEM_ICON_SIZE: f32 = 45.;
+const ITEM_ICON_SIZE: f32 = 10.0;
 
 #[derive(Debug, Clone, Component)]
 struct ShopItem;
@@ -174,7 +174,7 @@ fn shop_item_button_content(actor_type: &ActorType) -> impl Bundle {
             justify_content: JustifyContent::Center,
             flex_direction: FlexDirection::Column,
             flex_grow: 1.0,
-            row_gap: Px(5.0),
+            row_gap: Vh(1.0),
             ..default()
         },
         children![
@@ -185,8 +185,10 @@ fn shop_item_button_content(actor_type: &ActorType) -> impl Bundle {
                     ..default()
                 },
                 Node {
-                    width: Val::Px(ITEM_ICON_SIZE),
-                    height: Val::Px(ITEM_ICON_SIZE),
+                    width: Val::Vh(ITEM_ICON_SIZE),
+                    height: Val::Vh(ITEM_ICON_SIZE),
+                    //Val::Px(ITEM_ICON_SIZE),
+                    // Val::Px(ITEM_ICON_SIZE),
                     ..default()
                 },
                 Pickable::IGNORE,
@@ -298,7 +300,7 @@ fn items_panel() -> impl Bundle {
             (
                 ShopItemsPanel,
                 Node {
-                    width: Px(250.),
+                    width: Vh(50.),
                     height: Percent(100.),
                     // flex_grow: 1.0,
                     flex_direction: FlexDirection::Column,
@@ -324,7 +326,7 @@ fn info_panel() -> impl Bundle {
     (
         Node {
             height: Percent(100.),
-            width: Px(400.),
+            width: Vh(50.),
             flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::FlexStart,
             align_items: AlignItems::Stretch,
@@ -362,7 +364,7 @@ fn info_text() -> impl Bundle {
         Node {
             display: Display::None,
             margin: UiRect::new(Px(0.), Px(0.), Px(0.), Px(5.)),
-            padding: UiRect::all(Px(10.)),
+            padding: UiRect::all(Vh(2.)),
             flex_grow: 1.0,
             ..default()
         },

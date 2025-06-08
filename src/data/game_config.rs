@@ -31,7 +31,9 @@ pub struct Checker {
 #[derive(serde::Deserialize, Resource, Clone, Copy)]
 pub struct GameGameConfig {
     pub start_gold: u64,
+    pub start_required_gold: u64,
     pub restock_multiplier: f32,
+    pub gold_required_multiplier: f32,
 }
 
 #[derive(serde::Deserialize, Resource, Clone, Copy)]
@@ -64,4 +66,5 @@ pub struct TurnConfig {
     pub try_push_duration: f32,
     pub complete_push_duration: f32,
     pub cancel_push_duration: f32,
+    pub turn_duration: f32,
 }

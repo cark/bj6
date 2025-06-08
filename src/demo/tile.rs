@@ -135,7 +135,7 @@ fn show_selected_actor_tile(
                     .repeat(Repeat::Infinitely)
                     .repeat_style(RepeatStyle::PingPong)
                     .insert_tween_here(
-                        Duration::from_secs_f32(0.2),
+                        Duration::from_secs_f32(0.25),
                         EaseKind::CircularOut,
                         target.with(scale(Vec3::splat(0.90), Vec3::splat(1.05))),
                     );

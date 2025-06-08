@@ -4,7 +4,7 @@ use crate::{
     AppSystems,
     data::game_config::GameConfig,
     demo::{
-        actor::ActorRotationFixupEvent, puff::SpawDropParticlesEvent,
+        Paused, actor::ActorRotationFixupEvent, puff::SpawDropParticlesEvent,
         ui::actions::SetActiveActionEvent,
     },
     model::{actor::ActorId, actor_type::ActorTypeId, game::Game},
@@ -26,7 +26,7 @@ pub(super) fn plugin(app: &mut App) {
         Update,
         (move_drag_image, check_clicks)
             .in_set(AppSystems::Update)
-            .run_if(in_state(GameplayState::Drag)),
+            .run_if(in_state(GameplayState::Drag).and(in_state(Paused(false)))),
     );
     app.add_systems(OnExit(GameplayState::Drag), exit);
     app.add_systems(
