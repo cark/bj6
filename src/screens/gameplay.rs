@@ -46,7 +46,7 @@ fn spawn_pause_overlay(mut commands: Commands) {
             height: Percent(100.0),
             ..default()
         },
-        GlobalZIndex(1),
+        GlobalZIndex(9),
         BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.8)),
         StateScoped(Pause(true)),
     ));

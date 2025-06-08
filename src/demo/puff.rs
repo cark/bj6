@@ -21,7 +21,7 @@ pub(super) fn plugin(app: &mut App) {
     app.add_observer(on_spawn_drop_particles);
     app.add_observer(on_spawn_hit_particles);
     app.add_systems(Startup, setup);
-    app.add_systems(Update, click);
+    // app.add_systems(Update, click);
 }
 
 #[derive(Event, Debug, Clone)]
@@ -62,33 +62,33 @@ fn setup(mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>, mut comm
     commands.insert_resource(PuffAtlasLayout(handle));
 }
 
-fn click(mut commands: Commands, input: Res<ButtonInput<MouseButton>>) {
-    if input.just_pressed(MouseButton::Right) {
-        commands.trigger(SpawDropParticlesEvent(ivec2(0, 0)));
-        // spawn_particle(
-        //     commands.reborrow(),
-        //     SpawnPuffEvent,
-        //     ParticleConfig::new(Duration::from_secs_f32(2.))
-        //         .add_tweener(ParticleTweener::Speed {
-        //             start: Isometry2d::new(Vec2::X * 50., Rot2::degrees(60.0)),
-        //             end: Isometry2d::new(Vec2::ZERO, Rot2::degrees(60.0)),
-        //             ease: EaseFunction::CubicOut,
-        //         })
-        //         .add_tweener(ParticleTweener::Scale {
-        //             start: 0.2,
-        //             end: 1.5,
-        //             ease: EaseFunction::QuadraticOut,
-        //         })
-        //         .add_tweener(ParticleTweener::Color {
-        //             start: Color::WHITE,
-        //             end: Color::WHITE.with_alpha(0.0),
-        //             ease: EaseFunction::CircularIn,
-        //         }),
-        //     Vec3::splat(0.).with_z(3.0),
-        //     1.,
-        // );
-    }
-}
+// fn click(mut commands: Commands, input: Res<ButtonInput<MouseButton>>) {
+//     if input.just_pressed(MouseButton::Right) {
+//         // commands.trigger(SpawDropParticlesEvent(ivec2(0, 0)));
+//         // spawn_particle(
+//         //     commands.reborrow(),
+//         //     SpawnPuffEvent,
+//         //     ParticleConfig::new(Duration::from_secs_f32(2.))
+//         //         .add_tweener(ParticleTweener::Speed {
+//         //             start: Isometry2d::new(Vec2::X * 50., Rot2::degrees(60.0)),
+//         //             end: Isometry2d::new(Vec2::ZERO, Rot2::degrees(60.0)),
+//         //             ease: EaseFunction::CubicOut,
+//         //         })
+//         //         .add_tweener(ParticleTweener::Scale {
+//         //             start: 0.2,
+//         //             end: 1.5,
+//         //             ease: EaseFunction::QuadraticOut,
+//         //         })
+//         //         .add_tweener(ParticleTweener::Color {
+//         //             start: Color::WHITE,
+//         //             end: Color::WHITE.with_alpha(0.0),
+//         //             ease: EaseFunction::CircularIn,
+//         //         }),
+//         //     Vec3::splat(0.).with_z(3.0),
+//         //     1.,
+//         // );
+//     }
+// }
 
 fn on_spawn_drop_particles(
     trigger: Trigger<SpawDropParticlesEvent>,

@@ -13,10 +13,11 @@ pub mod ui;
 
 use bevy::prelude::*;
 
-use crate::screens::Screen;
+use crate::{menus::Menu, screens::Screen};
 
 pub(super) fn plugin(app: &mut App) {
     app.init_state::<GameplayState>();
+    app.add_computed_state::<Paused>();
     app.add_plugins((
         mouse::plugin,
         camera::plugin,
@@ -31,7 +32,16 @@ pub(super) fn plugin(app: &mut App) {
         turn::plugin,
         follow::plugin,
     ));
+    // app.add_systems(OnEnter(Paused(true)), enter_paused);
+    // app.add_systems(OnExit(Paused(true)), exit_paused);
 }
+
+// fn enter_paused() {
+//     warn!("Entering paused state");
+// }
+// fn exit_paused() {
+//     warn!("Exiting paused state");
+// }
 
 #[derive(SubStates, Default, Copy, Clone, Eq, PartialEq, Hash, Debug)]
 #[source(Screen = Screen::Gameplay)]
@@ -45,4 +55,18 @@ pub enum GameplayState {
     Turn,
     Drag,
     // Run,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Paused(bool);
+
+impl ComputedStates for Paused {
+    type SourceStates = Menu;
+
+    fn compute(sources: Self::SourceStates) -> Option<Self> {
+        match sources {
+            Menu::Settings | Menu::Pause => Some(Paused(true)),
+            _ => Some(Paused(false)),
+        }
+    }
 }

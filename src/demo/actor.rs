@@ -25,7 +25,7 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(
         Update,
         (actor_click, update_actions, rotate)
-            .run_if(in_state(GameplayState::Placement))
+            .run_if(in_state(GameplayState::Placement).and(in_state(Screen::Gameplay)))
             .in_set(AppSystems::Update),
     );
 }

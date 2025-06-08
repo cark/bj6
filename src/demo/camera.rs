@@ -3,7 +3,14 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{AppSystems, camera::MainCamera, data::game_config::GameConfig, screens::Screen};
+use crate::{
+    AppSystems,
+    camera::MainCamera,
+    data::game_config::GameConfig,
+    demo::{Paused, tile::tile_coord_to_world_coord},
+    model::{actor::ActorId, game::Game},
+    screens::Screen,
+};
 
 use super::{GameplayState, mouse::MouseState};
 
@@ -12,6 +19,7 @@ pub fn plugin(app: &mut App) {
         translation: vec2(0.0, 0.0),
         scale: 1.0,
     });
+    app.insert_resource(CameraDecay(1.0));
     app.add_systems(
         Update,
         move_camera
@@ -29,9 +37,16 @@ pub fn plugin(app: &mut App) {
         (zoom_destination, apply_zoom_limits)
             .chain()
             .in_set(AppSystems::Update)
-            .run_if(in_state(Screen::Gameplay)),
+            .run_if(in_state(Screen::Gameplay).and(in_state(Paused(false)))),
     );
+    app.add_systems(OnEnter(GameplayState::Turn), lower_decay);
+    app.add_systems(OnEnter(GameplayState::Placement), higher_decay);
+
+    app.add_observer(on_camera_to_actor);
 }
+
+#[derive(Debug, Clone, Copy, Event)]
+pub struct CameraToActorEvent(pub ActorId);
 
 #[derive(Debug, Clone, Copy, Resource)]
 
@@ -40,15 +55,39 @@ pub struct CameraDestination {
     pub scale: f32,
 }
 
+#[derive(Debug, Clone, Copy, Resource)]
+struct CameraDecay(f32);
+
+fn lower_decay(mut decay: ResMut<CameraDecay>, config: Res<GameConfig>) {
+    decay.0 = config.camera.turn_decay;
+}
+
+fn higher_decay(mut decay: ResMut<CameraDecay>, config: Res<GameConfig>) {
+    decay.0 = config.camera.follow_decay;
+}
+
+fn on_camera_to_actor(
+    trigger: Trigger<CameraToActorEvent>,
+    mut camera_destination: ResMut<CameraDestination>,
+    game: Res<Game>,
+    config: Res<GameConfig>,
+) {
+    let ev = trigger.event();
+    let actor = game.actor_view(&ev.0).unwrap();
+    let translation = tile_coord_to_world_coord(actor.actor.coord, config.checker.tile_size);
+    camera_destination.translation = translation;
+    camera_destination.scale = 0.5;
+}
+
 fn move_camera(
     destination: Res<CameraDestination>,
     camera: Single<(&mut Transform, &mut Projection), With<MainCamera>>,
     time: Res<Time>,
-    config: Res<GameConfig>,
+    camera_decay: Res<CameraDecay>,
 ) {
     let (mut camera_transform, mut projection) = camera.into_inner();
     let target = destination.translation.extend(0.0);
-    let decay_rate = f32::ln(config.camera.follow_decay);
+    let decay_rate = f32::ln(camera_decay.0);
     let delta = time.delta_secs();
     let mut camera_pos = camera_transform.translation;
     camera_pos.smooth_nudge(&target, decay_rate, delta);
@@ -86,6 +125,7 @@ fn zoom_destination(
     camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
     gameplay_state: Res<State<GameplayState>>,
     time: Res<Time>,
+    decay: Res<CameraDecay>,
     config: Res<GameConfig>,
 ) {
     if ![GameplayState::Placement, GameplayState::Drag].contains(gameplay_state.get()) {
@@ -109,7 +149,7 @@ fn zoom_destination(
                     .unwrap_or(destination.translation);
                 destination.translation.smooth_nudge(
                     &mouse_world_pos,
-                    f32::ln(config.camera.follow_decay),
+                    f32::ln(decay.0),
                     time.delta_secs() * 2.0,
                 );
             }

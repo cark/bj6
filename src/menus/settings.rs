@@ -23,7 +23,7 @@ pub(super) fn plugin(app: &mut App) {
 fn spawn_settings_menu(mut commands: Commands) {
     commands.spawn((
         widget::center_ui_root("Settings Menu"),
-        GlobalZIndex(2),
+        GlobalZIndex(10),
         StateScoped(Menu::Settings),
         children![
             widget::header("Settings"),

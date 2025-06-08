@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 
 use crate::{
-    AppSystems, camera::MainCamera, demo::ui::actions::SetActiveActionEvent, screens::Screen,
+    AppSystems,
+    camera::MainCamera,
+    demo::{Paused, ui::actions::SetActiveActionEvent},
+    screens::Screen,
     theme::interaction::ButtonHovering,
 };
 
@@ -15,7 +18,7 @@ pub fn plugin(app: &mut App) {
     app.add_systems(
         Update,
         (
-            start_panning.run_if(in_state(MouseState::Normal)),
+            start_panning.run_if(in_state(MouseState::Normal).and(in_state(Paused(false)))),
             stop_panning.run_if(in_state(MouseState::Pan)),
             update_mouse_coords,
             update_actions

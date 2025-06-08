@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 use bevy_tween::{
-    bevy_time_runner::TimeRunnerEnded,
+    bevy_time_runner::{TimeRunner, TimeRunnerEnded},
     combinator::{event, forward, sequence, tween},
     interpolate::translation,
     prelude::{AnimationBuilderExt, EaseKind, Repeat, RepeatStyle, TweenEvent},
@@ -13,8 +13,9 @@ use bevy_tween::{
 use crate::{
     data::game_config::GameConfig,
     demo::{
-        GameplayState,
+        GameplayState, Paused,
         actor::{ACTOR_Z, ActorEntities},
+        camera::CameraToActorEvent,
         follow::{Follows, follow_offset},
         level::{LevelAssets, ResetBoardEvent},
         puff::SpawnHitParticlesEvent,
@@ -34,6 +35,10 @@ pub(super) fn plugin(app: &mut App) {
 
     app.add_systems(OnEnter(GameplayState::Turn), enter);
     app.add_systems(OnExit(GameplayState::Turn), exit);
+
+    app.add_systems(OnEnter(Paused(true)), enter_pause);
+    app.add_systems(OnExit(Paused(true)), exit_pause);
+
     app.add_systems(OnEnter(TurnState::EndTurn), enter_end_turn);
     app.add_systems(Update, on_time_runner_ended);
 
@@ -105,6 +110,7 @@ struct CancelPushEvent(ActorId, IVec2);
 struct CompletePushEvent(ActorId, IVec2);
 
 #[derive(Event, Debug)]
+#[allow(dead_code)]
 struct PrizeEvent(ActorId, u64);
 
 fn enter(mut commands: Commands, game: Res<Game>) {
@@ -123,6 +129,18 @@ fn enter(mut commands: Commands, game: Res<Game>) {
 fn exit(mut command: Commands, mut set_state: ResMut<NextState<TurnState>>) {
     command.remove_resource::<Cmds>();
     set_state.set(TurnState::WorkaroundBugs);
+}
+
+fn enter_pause(mut q_time_runner: Query<&mut TimeRunner>) {
+    for mut time_runner in &mut q_time_runner {
+        time_runner.set_paused(true);
+    }
+}
+
+fn exit_pause(mut q_time_runner: Query<&mut TimeRunner>) {
+    for mut time_runner in &mut q_time_runner {
+        time_runner.set_paused(false);
+    }
 }
 
 fn on_need_command(
@@ -290,6 +308,8 @@ fn on_move_actor(
             let end = tile_coord_to_world_coord(ev.1, config.checker.tile_size).extend(ACTOR_Z);
             game.update_actor(&ev.0, |actor| actor.coord = ev.1);
 
+            commands.trigger(CameraToActorEvent(actor_id));
+
             let target = TargetComponent::marker();
             commands
                 .entity(actor_entity)
@@ -357,6 +377,7 @@ fn on_hit(
     let target_coord = ev.1;
     if let Some(actor_view) = game.actor_view(&actor_id) {
         if let Some(actor_entity) = actor_entities.get(&actor_id) {
+            commands.trigger(CameraToActorEvent(actor_id));
             let start = tile_coord_to_world_coord(actor_view.actor.coord, config.checker.tile_size)
                 .extend(ACTOR_Z);
             let end =
@@ -402,6 +423,7 @@ fn on_try_push(
     let target_coord = ev.1;
     if let Some(actor_view) = game.actor_view(&actor_id) {
         if let Some(actor_entity) = actor_entities.get(&actor_id) {
+            commands.trigger(CameraToActorEvent(actor_id));
             let start = tile_coord_to_world_coord(actor_view.actor.coord, config.checker.tile_size)
                 .extend(ACTOR_Z);
             let end =
@@ -437,6 +459,7 @@ fn on_complete_push(
     let target_coord = ev.1;
     if let Some(actor_view) = game.actor_view(&actor_id) {
         if let Some(actor_entity) = actor_entities.get(&actor_id) {
+            commands.trigger(CameraToActorEvent(actor_id));
             let start = tile_coord_to_world_coord(actor_view.actor.coord, config.checker.tile_size)
                 .extend(ACTOR_Z);
             let end =
@@ -473,6 +496,7 @@ fn on_cancel_push(
     let target_coord = ev.1;
     if let Some(actor_view) = game.actor_view(&actor_id) {
         if let Some(actor_entity) = actor_entities.get(&actor_id) {
+            commands.trigger(CameraToActorEvent(actor_id));
             let start = tile_coord_to_world_coord(actor_view.actor.coord, config.checker.tile_size)
                 .extend(ACTOR_Z);
             let end =

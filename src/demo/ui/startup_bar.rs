@@ -11,12 +11,14 @@ use crate::{
         tile::{HoveredActor, tile_coord_to_world_coord},
     },
     model::game::Game,
+    screens::Screen,
 };
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(
         Update,
-        check_start_click.run_if(in_state(GameplayState::Placement)),
+        check_start_click
+            .run_if(in_state(GameplayState::Placement).and(in_state(Screen::Gameplay))),
     );
     app.add_systems(
         Update,

@@ -5,6 +5,7 @@ use crate::{
         GameplayState,
         ui::smart_text::{SmartText, UpdateNamedValueEvent},
     },
+    menus::Menu,
     model::game::Game,
     screens::Screen,
     theme::widget::{self, ButtonClick, set_enabled},
@@ -13,7 +14,16 @@ use crate::{
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(GameplayState::Placement), enable_shop_button);
     app.add_systems(OnExit(GameplayState::Placement), disable_shop_button);
+    app.add_systems(
+        OnExit(Menu::Pause),
+        enable_shop_button.run_if(in_state(GameplayState::Placement)),
+    );
+    app.add_systems(
+        OnEnter(Menu::Pause),
+        disable_shop_button.run_if(in_state(GameplayState::Placement)),
+    );
     app.add_systems(Update, update_top_bar.run_if(in_state(Screen::Gameplay)));
+
     app.add_observer(on_update_top_bar);
 }
 

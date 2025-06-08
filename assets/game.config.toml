@@ -1,5 +1,6 @@
 [camera]
 follow_decay = 500
+turn_decay = 3.0
 zoom_min_tiles = 6
 zoom_max_tiles = 48
 

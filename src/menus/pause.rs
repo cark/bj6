@@ -15,7 +15,7 @@ pub(super) fn plugin(app: &mut App) {
 fn spawn_pause_menu(mut commands: Commands) {
     commands.spawn((
         widget::center_ui_root("Pause Menu"),
-        GlobalZIndex(2),
+        GlobalZIndex(10),
         StateScoped(Menu::Pause),
         children![
             widget::header("Game paused"),
