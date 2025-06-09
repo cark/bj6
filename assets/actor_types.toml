@@ -117,8 +117,9 @@ program = [
         ],
     ] },
 ]
-description = "There is no reward for poking the dead. Pokes every adjacent location with terror."
+description = "There is no reward for poking the dead. Pokes every adjacent location with terror.\n\nCannot be pushed."
 rotatable = false
+pushable = false
 
 [broom]
 name = "Broom"
