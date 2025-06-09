@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+#[cfg(debug_assertions)]
 use bevy::color::palettes::tailwind::*;
 use bevy::prelude::*;
 use bevy_tween::{
@@ -31,6 +32,7 @@ pub(super) fn plugin(app: &mut App) {
                 show_selected_actor_tile.run_if(in_state(GameplayState::Placement)),
             )
                 .chain(),
+            #[cfg(debug_assertions)]
             show_hovered_tile_debug,
         )
             .chain()
@@ -58,6 +60,7 @@ fn update_hovered_tile_coord(
     });
 }
 
+#[cfg(debug_assertions)]
 fn show_hovered_tile_debug(
     mut _cmd: Commands,
     mut gizmos: Gizmos,
