@@ -4,15 +4,15 @@
 use bevy::prelude::*;
 
 use crate::{
-    asset_tracking::ResourceHandles,
-    data::game_config::{GameConfig, GameConfigHandle},
-    model::actor_types::ActorTypesHandle,
+    asset_tracking::ResourceHandles, // Still used for all_assets_loaded
+    // data::game_config::{GameConfig, GameConfigHandle}, // GameConfigHandle no longer used here
+    // model::actor_types::ActorTypesHandle, // ActorTypesHandle no longer used here
     screens::Screen,
     theme::prelude::*,
 };
 
 pub(super) fn plugin(app: &mut App) {
-    app.init_asset::<GameConfig>();
+    // app.init_asset::<GameConfig>();
     app.add_systems(OnEnter(Screen::Loading), spawn_loading_screen);
 
     app.add_systems(
@@ -21,16 +21,13 @@ pub(super) fn plugin(app: &mut App) {
     );
 }
 
-fn spawn_loading_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn spawn_loading_screen(mut commands: Commands) {
+    // GameConfig and ActorTypes are now loaded in data::setup_static_data on Startup
     commands.spawn((
         widget::center_ui_root("Loading Screen"),
         StateScoped(Screen::Loading),
         children![widget::label("Loading...")],
     ));
-    let game_config_handle = GameConfigHandle(asset_server.load("game.config.toml"));
-    let actor_types_handle = ActorTypesHandle(asset_server.load("all.actor_types.toml"));
-    commands.insert_resource(game_config_handle);
-    commands.insert_resource(actor_types_handle);
 }
 
 fn enter_gameplay_screen(mut next_screen: ResMut<NextState<Screen>>) {

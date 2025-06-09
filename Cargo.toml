@@ -18,14 +18,15 @@ tracing = { version = "0.1", features = [
     "release_max_level_warn",
 ] }
 
-bevy_common_assets = { version = "0.13.0", features = ["toml", "ron"] }
+# bevy_common_assets = { version = "0.13.0", features = ["toml", "ron"] }
 serde = { version = "1", features = ["derive"] }
 ron = { version = "0.10" }
 im = "15.1"
 thiserror = "2.0"
 # bevy_tweening = "0.13"
 bevy_tween = "0.8"
-nom = "8.0"
+toml = { version = "0.8" }
+# nom = "8.0"
 
 
 # Your web builds will start failing if you add a dependency that pulls in `getrandom` v0.3+.
