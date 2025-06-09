@@ -16,7 +16,7 @@ pub(super) enum ParseNode<'a> {
 
 // there ain't no backtracking on this train
 
-pub(super) fn parse(input: &str) -> Option<ParseNode> {
+pub(super) fn parse(input: &str) -> Option<ParseNode<'_>> {
     parse_nodes(input).and_then(|(parse_node, rest)| {
         if rest.is_empty() {
             Some(parse_node)
@@ -26,7 +26,7 @@ pub(super) fn parse(input: &str) -> Option<ParseNode> {
     })
 }
 
-fn parse_nodes(input: &str) -> Option<(ParseNode, &str)> {
+fn parse_nodes(input: &str) -> Option<(ParseNode<'_>, &str)> {
     let mut nodes = Vec::new();
     let mut current_input = input;
     while let Some((node, after_node_input)) = parse_node(current_input) {
@@ -46,14 +46,14 @@ fn parse_nodes(input: &str) -> Option<(ParseNode, &str)> {
     }
 }
 
-fn parse_node(input: &str) -> Option<(ParseNode, &str)> {
+fn parse_node(input: &str) -> Option<(ParseNode<'_>, &str)> {
     parse_text(input)
         .or_else(|| parse_icon(input))
         // .or_else(|| parse_hinted(input))
         .or_else(|| parse_named(input))
 }
 
-fn parse_text(input: &str) -> Option<(ParseNode, &str)> {
+fn parse_text(input: &str) -> Option<(ParseNode<'_>, &str)> {
     let bytes = input
         .chars()
         .take_while(|c| !(['{', '}'].contains(c) || c.is_whitespace()))
@@ -66,7 +66,7 @@ fn parse_text(input: &str) -> Option<(ParseNode, &str)> {
     }
 }
 
-fn parse_icon(input: &str) -> Option<(ParseNode, &str)> {
+fn parse_icon(input: &str) -> Option<(ParseNode<'_>, &str)> {
     let input = input.strip_prefix("{icon:")?;
     let (name, rest) = parse_name(input)?;
     let rest = rest.strip_prefix('}')?;
@@ -85,7 +85,7 @@ fn parse_icon(input: &str) -> Option<(ParseNode, &str)> {
 //     Some((ParseNode::Hinted(Box::new(left), Box::new(right)), rest))
 // }
 
-fn parse_named(input: &str) -> Option<(ParseNode, &str)> {
+fn parse_named(input: &str) -> Option<(ParseNode<'_>, &str)> {
     let input = input.strip_prefix("{named:")?;
     let (name, rest) = parse_name(input)?;
     let rest = rest.strip_prefix('}')?;
@@ -126,7 +126,7 @@ fn parse_alpha(input: &str) -> Option<(usize, &str)> {
         })
 }
 
-fn parse_space(input: &str) -> Option<(ParseNode, &str)> {
+fn parse_space(input: &str) -> Option<(ParseNode<'_>, &str)> {
     let len = input
         .chars()
         .take_while(|c| {
