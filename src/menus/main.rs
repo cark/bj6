@@ -15,6 +15,7 @@ fn spawn_main_menu(mut commands: Commands) {
         StateScoped(Menu::Main),
         #[cfg(not(target_family = "wasm"))]
         children![
+            title(),
             widget::button("Play", enter_loading_or_gameplay_screen),
             widget::button("Settings", open_settings_menu),
             widget::button("Credits", open_credits_menu),
@@ -22,11 +23,27 @@ fn spawn_main_menu(mut commands: Commands) {
         ],
         #[cfg(target_family = "wasm")]
         children![
+            title(),
             widget::button("Play", enter_loading_or_gameplay_screen),
             widget::button("Settings", open_settings_menu),
             widget::button("Credits", open_credits_menu),
         ],
     ));
+}
+
+fn title() -> impl Bundle {
+    (
+        Name::new("Title"),
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Px(100.0),
+            // align_self: AlignSelf::Center,
+            ..default()
+        },
+        Text("Turing begone !".to_string()),
+        TextFont::from_font_size(60.),
+        TextLayout::new_with_justify(JustifyText::Center),
+    )
 }
 
 fn enter_loading_or_gameplay_screen(

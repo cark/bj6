@@ -35,8 +35,10 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnExit(Screen::Gameplay), exit);
     app.add_systems(
         Update,
-        update_actions.run_if(in_state(GameplayState::Placement)),
+        (update_actions, cheat)
+            .run_if(in_state(GameplayState::Placement).and(in_state(Screen::Gameplay))),
     );
+    //app.add_systems()
     //app.Add_system(OnEnter, )
 
     app.add_observer(on_reset_board);
@@ -93,8 +95,16 @@ pub struct LevelAssets {
     pub try_push_sfx: Handle<AudioSource>,
     #[dependency]
     pub cancel_push_sfx: Handle<AudioSource>,
+    #[dependency]
+    pub coin_sfx: Handle<AudioSource>,
     // #[dependency]
     // pub song2: Handle<AudioSource>,
+}
+
+fn cheat(buttons: Res<ButtonInput<KeyCode>>, mut game: ResMut<Game>) {
+    if cfg!(debug_assertions) && buttons.just_pressed(KeyCode::F9) {
+        game.earn_prize_gold(100);
+    }
 }
 
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
@@ -125,6 +135,7 @@ impl FromWorld for LevelAssets {
             hit_sfx: assets.load("audio/sound_effects/hit.ogg"),
             try_push_sfx: assets.load("audio/sound_effects/try_push.ogg"),
             cancel_push_sfx: assets.load("audio/sound_effects/cancel_push.ogg"),
+            coin_sfx: assets.load("audio/sound_effects/coin.ogg"),
         }
     }
 }

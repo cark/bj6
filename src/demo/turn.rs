@@ -616,10 +616,20 @@ fn on_time_runner_ended(mut reader: EventReader<TimeRunnerEnded>, mut commands: 
     }
 }
 
-fn on_prize(trigger: Trigger<PrizeEvent>, mut commands: Commands, mut game: ResMut<Game>) {
+fn on_prize(
+    trigger: Trigger<PrizeEvent>,
+    mut commands: Commands,
+    mut game: ResMut<Game>,
+    assets: Res<LevelAssets>,
+) {
     let ev = trigger.event();
     game.earn_prize_gold(ev.1);
     commands.trigger(UpdateTopBarEvent);
+    anim_event_in(
+        commands.reborrow(),
+        0.0,
+        AnimEvent::PlaySfx(assets.coin_sfx.clone()),
+    );
     done_in(commands.reborrow(), 0.01);
 }
 

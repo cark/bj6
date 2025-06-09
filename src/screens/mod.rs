@@ -27,8 +27,8 @@ pub(super) fn plugin(app: &mut App) {
 #[states(scoped_entities)]
 pub enum Screen {
     Splash,
-    Title,
     #[default]
+    Title,
     Loading,
     Gameplay,
 }

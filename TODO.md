@@ -2,5 +2,5 @@
 - [ ] rotate sfx
 - [ ] rotate while drag
 - [ ] money flying
-- [ ] esc shop
+- [v] esc shop
 - [ ] double click shop

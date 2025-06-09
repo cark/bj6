@@ -8,7 +8,7 @@ zoom_max_tiles = 48
 tile_size = 40
 
 [game]
-start_gold = 100
+start_gold = 1
 start_required_gold = 20
 gold_required_multiplier = 2.0
 restock_multiplier = 1.5

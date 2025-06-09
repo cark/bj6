@@ -1,4 +1,7 @@
-use bevy::prelude::{Val::*, *};
+use bevy::{
+    input::common_conditions::input_just_pressed,
+    prelude::{Val::*, *},
+};
 
 use crate::{
     demo::{
@@ -26,6 +29,10 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(
         Update,
         items_panel_added.run_if(component_added::<ShopItemsPanel>),
+    );
+    app.add_systems(
+        Update,
+        close_shop.run_if(in_state(GameplayState::Shop).and(input_just_pressed(KeyCode::Escape))),
     );
     // app.add_systems(Update, systems)
     app.add_observer(on_populate_shop_items);
@@ -518,6 +525,10 @@ fn on_close_shop_button_clicked(
     _: Trigger<Pointer<Click>>,
     mut next_state: ResMut<NextState<GameplayState>>,
 ) {
+    next_state.set(GameplayState::Placement);
+}
+
+fn close_shop(mut next_state: ResMut<NextState<GameplayState>>) {
     next_state.set(GameplayState::Placement);
 }
 
